@@ -15,9 +15,9 @@ DOXY=ncvar_get(filenc,as.character(PARAM_name))
 PRES=ncvar_get(filenc,"PRES")
 
 # We interpolate CTD DATA to get TEMP and PSAL at all levels
-TEMP_INTERP<- approx(PRES, CTD$TEMP, CTD$PRES, rule=2)$y
+TEMP_INTERP<- approx(CTD$PRES, CTD$TEMP, PRES, rule=2)$y
 
-PSAL_INTERP  <- approx(PRES, CTD$PSAL, CTD$PRES, rule=2)$y
+PSAL_INTERP  <- approx(CTD$PRES, CTD$PSAL, PRES, rule=2)$y
 
 #### Estimate PPOX from DOXY
 # calculate PPOX_DOXY in mbar from DOXY in micromol/kg
