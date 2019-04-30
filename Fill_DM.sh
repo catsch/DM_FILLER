@@ -120,9 +120,11 @@ case "$id_LIST" in
 		do
 			# core file
 			icore=`echo $i | sed s/"profiles\/B"/"profiles\/"/`
-			if [ ! -e $icore ] then  
+			if [ ! -e $icore ] 
+				then  
 				icore=`echo $icore | sed s/"profiles\/D"/"profiles\/R"/`
-				if [ ! -e $icore ] then 
+				if [ ! -e $icore ] 
+					then 
 					icore=`echo $icore | sed s/"profiles\/R"/"profiles\/D"/`
 				fi
 			fi
@@ -204,9 +206,11 @@ case "$id_LIST" in
 			do
 				# core file
 				icore=`echo $i | sed s/"profiles\/B"/"profiles\/"/`
-				if [ ! -e $icore ] then  
+				if [ ! -e $icore ]
+				 then  
 					icore=`echo $icore | sed s/"profiles\/D"/"profiles\/R"/`
-					if [ ! -e $icore ] then 
+					if [ ! -e $icore ] 
+						then 
 						icore=`echo $icore | sed s/"profiles\/R"/"profiles\/D"/`
 					fi
 				fi
@@ -224,7 +228,7 @@ esac	# end case to specify or not different slots
 # Write the launcher for the DM
 ###############################################
 echo "R DM_list_"$id_WMO "--vanilla < WRITE_DM.R" > lance_DM.sh
-chmod +x lance_DM_dev.sh
+chmod +x lance_DM.sh
 
 ################################################
 # Close the input_file creation 
