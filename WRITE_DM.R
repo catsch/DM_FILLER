@@ -71,7 +71,7 @@ SLOPE=input$slope
 DRIFT=input$drift 
 
 # Get the error
-PARAM_ADJUSTED_ERROR_value=input$param_error
+ERROR=input$param_error
 
 #get the new value of the QC
 PARAM_ADJUSTED_QC_value=input$qc
@@ -110,6 +110,8 @@ for (i in seq(1,length(LIST_nc))) {
 	PARAM_ADJUSTED_name=paste(PARAM_name[i],"_ADJUSTED",sep="")
 
 	PARAM_ADJUSTED_QC_name=paste(PARAM_ADJUSTED_name,"_QC",sep="")
+
+	PARAM_QC_name=paste(PARAM_name[i],"_QC",sep="")
 
 	PARAM_ADJUSTED_ERROR_name=paste(PARAM_ADJUSTED_name,"_ERROR",sep="")
 
@@ -185,6 +187,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 	PARAM_ADJUSTED=ncvar_get(filenc,as.character(PARAM_ADJUSTED_name))
 
+	PARAM_ADJUSTED_ERROR=ncvar_get(filenc,as.character(PARAM_ADJUSTED_ERROR_name))
 
 	if ( CORRECTION_TYPE[i] == "AD") {
 
@@ -205,16 +208,25 @@ for (i in seq(1,length(LIST_nc))) {
 
 		if ( PARAM_name[i] == "DOXY" ) { 
 
-			PARAM_ADJUSTED=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], profile_date_juld ,launch_date_juld )
+			DOXY_ADJ=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld )
+
+			PARAM_ADJUSTED=DOXY_ADJ$DOXY
+
+			PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
 
 		} else {
 
 			PARAM_ADJUSTED=as.numeric((1.+DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE[i]*PARAM+OFFSET[i])
+
+			PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
+
 		}
 
 	} else {	
 
 		PARAM_ADJUSTED=rep(NA,length(PARAM_ADJUSTED))
+
+		PARAM_ADJUSTED_ERROR=rep(NA,length(PARAM_ADJUSTED))
 
 	}
 
@@ -226,7 +238,15 @@ for (i in seq(1,length(LIST_nc))) {
 
 	N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
-	PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)
+	if ( PARAM_name[i] == "DOXY" ) {
+
+		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
+
+	} else {
+
+		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)
+
+	}
 
 	if ( CORRECTION_TYPE[i] == "AD") {
 
@@ -256,6 +276,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 	}
 
+
 ###     Enter the Adjusted _QC in the file 
 
 	ncvar_put(filenc,PARAM_ADJUSTED_QC_name,PARAM_ADJUSTED_QC)
@@ -264,6 +285,7 @@ for (i in seq(1,length(LIST_nc))) {
 	
 	ncvar_put(filenc,PARAM_ADJUSTED_name,PARAM_ADJUSTED)
 
+	ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
 
 #####################################################################################
 # History Section

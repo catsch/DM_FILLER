@@ -66,20 +66,28 @@ esac
 ################################################################################
 ### Going to the DATA directory and list the files that need to be filled
 ################################################################################ 
-RT_DIR="../DATA/RT/"$id_WMO"/profiles"
-WORK_DIR="../DATA/WORK/"$id_WMO"/profiles"
+RT_DIR="../../DATA/RT/"$id_WMO"/profiles"
+WORK_DIR="../../DATA/WORK/"$id_WMO"/profiles"
+DM_DIR="../../DATA/DM/"$id_WMO"/profiles"
+
+# Test the existence of the DM DIRECTORY
+if [ ! -d "$DM_DIR" ] 
+then
+mkdir "../../DATA/DM/"$id_WMO
+mkdir $DM_DIR
+fi 
 
 # Test the existence of the WORKING DIRECTORY
 if [ ! -d "$WORK_DIR" ] 
 then
-mkdir "../DATA/WORK/"$id_WMO 
+mkdir "../../DATA/WORK/"$id_WMO 
 else
-echo "your working directory ../DATA/WORK/"$id_WMO "already exists, you should remove it before continuing"
+echo "your working directory ../../DATA/WORK/"$id_WMO "already exists, you should remove it before continuing"
 exit
 fi
 
 # To get some information on the DEPLOYMENT
-metadata_file="../DATA/RT/"$id_WMO"/"$id_WMO"_meta.nc"
+metadata_file="../../DATA/RT/"$id_WMO"/"$id_WMO"_meta.nc"
 
 # cp the file in a working directory
 cp -fr $RT_DIR $WORK_DIR
@@ -227,7 +235,12 @@ esac	# end case to specify or not different slots
 ###############################################
 # Write the launcher for the DM
 ###############################################
-echo "R DM_list_"$id_WMO "--vanilla < WRITE_DM.R" > lance_DM.sh
+echo "R DM_list_"$id_WMO "--vanilla < WRITE_DM.R" 	> lance_DM.sh
+echo "for i in \`ls -1 $WORK_DIR/B*\`"  		>> lance_DM.sh
+echo "do"						>> lance_DM.sh
+echo "j=\`echo $i | sed s/BR/BD/ | sed s/WORK/DM/\`" 	>> lance_DM.sh
+echo  "cp $i $j"					>> lance_DM.sh
+echo  "done"						>> lance_DM.sh
 chmod +x lance_DM.sh
 
 ################################################
