@@ -263,6 +263,8 @@ for (i in seq(1,length(LIST_nc))) {
 
 				PARAM_ADJUSTED[j,i_prof_param]=NA
 
+				PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+
 			}
 
 		}
@@ -318,6 +320,13 @@ for (i in seq(1,length(LIST_nc))) {
 ### 	HISTORY_ACTION (Change Value CV - I don't know If I should also said CF)
 	HISTORY_ACTION="CV  "
 	ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+#####################################################################################
+# DATE UPDATE 
+#####################################################################################
+
+###     DATE_UPDATE 
+	ncvar_put(filenc,"DATE_UPDATE",date_update[i])
 
 
 #####################################################################################

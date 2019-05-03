@@ -238,8 +238,8 @@ esac	# end case to specify or not different slots
 echo "R DM_list_"$id_WMO "--vanilla < WRITE_DM.R" 	> lance_DM.sh
 echo "for i in \`ls -1 $WORK_DIR/B*\`"  		>> lance_DM.sh
 echo "do"						>> lance_DM.sh
-echo "j=\`echo $i | sed s/BR/BD/ | sed s/WORK/DM/\`" 	>> lance_DM.sh
-echo  "cp $i $j"					>> lance_DM.sh
+echo "j=\`echo \$i | sed s/BR/BD/ | sed s/WORK/DM/\`" 	>> lance_DM.sh
+echo  "cp \$i \$j"					>> lance_DM.sh
 echo  "done"						>> lance_DM.sh
 chmod +x lance_DM.sh
 
