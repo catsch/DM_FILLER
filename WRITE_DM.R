@@ -157,7 +157,15 @@ for (i in seq(1,length(LIST_nc))) {
 
 		scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i])
 
-		scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+		if ( PARAM_name[i] == "DOXY" ) {
+
+			scientific_equation=paste("PPOX_ADJUSTED=(PPOX*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+
+		} else {
+
+			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+
+		}
 
 	} else {
 
@@ -189,7 +197,11 @@ for (i in seq(1,length(LIST_nc))) {
 
 	PARAM_ADJUSTED_ERROR=ncvar_get(filenc,as.character(PARAM_ADJUSTED_ERROR_name))
 
-	if ( CORRECTION_TYPE[i] == "AD") {
+        ## Check how many QC should be set/change
+        ## NUMBER OF QC for the PARAM
+        N_QC=length(which(!is.na(PARAM[,i_prof_param])))
+
+	if ( CORRECTION_TYPE[i] == "AD" ) {
 
 ###     For the Drift calculation we have to work on date 
 ###	First some Work on the date
@@ -206,13 +218,14 @@ for (i in seq(1,length(LIST_nc))) {
 
 	# For DOXY we need to go through the adjustment of PPOX_DOXY 
 
-		if ( PARAM_name[i] == "DOXY" ) { 
+		if ( PARAM_name[i] == "DOXY" ) {
 
-			DOXY_ADJ=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld )
 
-			PARAM_ADJUSTED=DOXY_ADJ$DOXY
+				DOXY_ADJ=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld )
 
-			PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
+				PARAM_ADJUSTED=DOXY_ADJ$DOXY
+
+				PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
 
 		} else {
 
@@ -233,10 +246,6 @@ for (i in seq(1,length(LIST_nc))) {
 ####################################################################################
 # PARAM_ADJUSTED_QC MODIFICATION
 ####################################################################################
-	## Check how many QC should be set/change
-	## NUMBER OF QC for the PARAM
-
-	N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
 	if ( PARAM_name[i] == "DOXY" ) {
 
@@ -340,6 +349,9 @@ for (i in seq(1,length(LIST_nc))) {
 # "D" -> 25% <= N < 50%
 # "E" -> 0% <= N < 25%
 # "F" -> N=0%; no profile levels have good data
+	
+# initialisation	
+	N_good=0
  
 # We are working on PARAM_ADJUSTED_QC[i_prof_param]
 	PROFILE_PARAM_QC=ncvar_get(filenc,PROFILE_PARAM_QC_name)
@@ -355,7 +367,7 @@ for (i in seq(1,length(LIST_nc))) {
 	N_QC_5=length(which(QC == "5"))
 	N_QC_8=length(which(QC == "8"))
 
-	N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC
+	N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC_tot
 
 	if ( N_good == 0) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"F"
 

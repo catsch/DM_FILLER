@@ -18,22 +18,32 @@ PPOX_ERROR=replace(DOXY,!is.na(DOXY),ERROR)
 # get the pressure
 PRES=ncvar_get(filenc,"PRES")
 
-# We interpolate CTD DATA to get TEMP and PSAL at all levels
-TEMP_INTERP<- approx(CTD$PRES, CTD$TEMP, PRES, rule=2)$y
+if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
-PSAL_INTERP  <- approx(CTD$PRES, CTD$PSAL, PRES, rule=2)$y
+	# We interpolate CTD DATA to get TEMP and PSAL at all levels
+	TEMP_INTERP<- approx(CTD$PRES, CTD$TEMP, PRES, rule=2)$y
 
-#### Estimate PPOX from DOXY
-# calculate PPOX_DOXY in mbar from DOXY in micromol/kg
-PPOX_DOXY=DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
+	PSAL_INTERP  <- approx(CTD$PRES, CTD$PSAL, PRES, rule=2)$y
 
-PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE*PPOX_DOXY+OFFSET)
+	#### Estimate PPOX from DOXY
+	# calculate PPOX_DOXY in mbar from DOXY in micromol/kg
+	PPOX_DOXY=DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
 
-# calculate DOXY in micromol/kg from PPOX_DOXY in mbar
-DOXY_ADJUSTED=PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)
+	PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE*PPOX_DOXY+OFFSET)
 
-# calculate the error on DOXY from error on PPOX
-ERROR_DOXY=PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_ERROR)
+	# calculate DOXY in micromol/kg from PPOX_DOXY in mbar
+	DOXY_ADJUSTED=PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)
+
+	# calculate the error on DOXY from error on PPOX
+	ERROR_DOXY=PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_ERROR)
+
+} else {
+
+	DOXY_ADJUSTED=DOXY
+	
+	ERROR_DOXY=PPOX_ERROR
+
+}
 
 result=(list(DOXY=DOXY_ADJUSTED,DOXY_ERROR=ERROR_DOXY))
 
