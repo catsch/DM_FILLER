@@ -1,6 +1,9 @@
 #######################################################################################
 #	This program is designed to modify a BR file into BD file
-#       Catherine Schmechtig 2018 July 		      
+#       Catherine Schmechtig 2018 July 	
+#
+#	V1.0 20190503 : Initial version	
+#	V1.1 20190517 : robust to CTD 	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset	
 #	-Change the QC
@@ -90,6 +93,8 @@ metadatafile=as.character(input$metadata_file)
 #####################################################################################
 for (i in seq(1,length(LIST_nc))) {
 
+	FLAG_CTD=TRUE
+
 	IDnc=as.character(LIST_nc[i])
 
 	IDnc_core=as.character(LIST_nc_core[i])
@@ -145,48 +150,6 @@ for (i in seq(1,length(LIST_nc))) {
 	index_scientific=append(index_param,1,after=0)
 
 ####################################################################################
-# SCIENTIFIC_CALIB_SECTION
-####################################################################################
-#	scientific calib comment
-	SCIENTIFIC_CALIB_COMMENT=str_pad(scientific_comment[i],256,"right")
-
-	ncvar_put(filenc,"SCIENTIFIC_CALIB_COMMENT",SCIENTIFIC_CALIB_COMMENT,start=index_scientific,count=c(256,1,1,1))
-
-# 	scientific calib Coefficient and equation 
-	if ( CORRECTION_TYPE[i] == "AD") {
-
-		scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i])
-
-		if ( PARAM_name[i] == "DOXY" ) {
-
-			scientific_equation=paste("PPOX_ADJUSTED=(PPOX*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
-
-		} else {
-
-			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
-
-		}
-
-	} else {
-
-		scientific_coefficient="none"
-
-		scientific_equation="none"
-		
-	}
-
-	SCIENTIFIC_CALIB_COEFFICIENT=str_pad(scientific_coefficient,256,"right")
-
-	ncvar_put(filenc,"SCIENTIFIC_CALIB_COEFFICIENT",SCIENTIFIC_CALIB_COEFFICIENT,start=index_scientific,count=c(256,1,1,1))
-
-	SCIENTIFIC_CALIB_EQUATION=str_pad(scientific_equation,256,"right")
-
-	ncvar_put(filenc,"SCIENTIFIC_CALIB_EQUATION",SCIENTIFIC_CALIB_EQUATION,start=index_scientific,count=c(256,1,1,1))
-
-#	Scientific calib date
-	ncvar_put(filenc,"SCIENTIFIC_CALIB_DATE",date_update[i],start=index_scientific,count=c(14,1,1,1))
-
-####################################################################################
 # PARAM_ADJUSTED Estimation
 ####################################################################################
 	# Please Check that we should work on Raw data and not on Adjusted Data but it could be an issue for quenching and factor 2 CATSCHM
@@ -196,10 +159,6 @@ for (i in seq(1,length(LIST_nc))) {
 	PARAM_ADJUSTED=ncvar_get(filenc,as.character(PARAM_ADJUSTED_name))
 
 	PARAM_ADJUSTED_ERROR=ncvar_get(filenc,as.character(PARAM_ADJUSTED_ERROR_name))
-
-        ## Check how many QC should be set/change
-        ## NUMBER OF QC for the PARAM
-        N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
 	if ( CORRECTION_TYPE[i] == "AD" ) {
 
@@ -226,6 +185,8 @@ for (i in seq(1,length(LIST_nc))) {
 				PARAM_ADJUSTED=DOXY_ADJ$DOXY
 
 				PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
+
+				FLAG_CTD=DOXY_ADJ$FLAG_CTD
 
 		} else {
 
@@ -257,7 +218,12 @@ for (i in seq(1,length(LIST_nc))) {
 
 	}
 
-	if ( CORRECTION_TYPE[i] == "AD") {
+        ## Check how many QC should be set/change
+        
+        N_QC=nchar(PARAM_ADJUSTED_QC[i_prof_param]) ## NUMBER OF QC for the PARAM
+	print(N_QC)
+
+	if ( CORRECTION_TYPE[i] == "AD" & N_QC > 0 ) {
 
 		for (j in seq(1,N_QC)) {
 
@@ -275,6 +241,8 @@ for (i in seq(1,length(LIST_nc))) {
 				PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
 
 			}
+
+			if (!FLAG_CTD) substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character("4") 
 
 		}
 
@@ -298,6 +266,65 @@ for (i in seq(1,length(LIST_nc))) {
 
 	ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
 
+
+
+
+
+
+####################################################################################
+# SCIENTIFIC_CALIB_SECTION
+####################################################################################
+
+#	scientific calib comment
+	SCIENTIFIC_CALIB_COMMENT=str_pad(scientific_comment[i],256,"right")
+
+	if (!FLAG_CTD) SCIENTIFIC_CALIB_COMMENT=str_pad("no adjustment is performed because of issues in CTD",256,"right")
+
+	ncvar_put(filenc,"SCIENTIFIC_CALIB_COMMENT",SCIENTIFIC_CALIB_COMMENT,start=index_scientific,count=c(256,1,1,1))
+
+# 	scientific calib Coefficient and equation 
+	if ( CORRECTION_TYPE[i] == "AD") {
+
+		scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i])
+
+		if ( PARAM_name[i] == "DOXY" ) {
+
+			scientific_equation=paste("PPOX_ADJUSTED=(PPOX*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+
+			if (!FLAG_CTD) {
+
+				scientific_coefficient="none"
+
+				scientific_equation="none"
+
+			}
+
+		} else {
+
+			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+
+		}
+
+	} else {
+
+		scientific_coefficient="none"
+
+		scientific_equation="none"
+		
+	}
+
+	SCIENTIFIC_CALIB_COEFFICIENT=str_pad(scientific_coefficient,256,"right")
+
+	ncvar_put(filenc,"SCIENTIFIC_CALIB_COEFFICIENT",SCIENTIFIC_CALIB_COEFFICIENT,start=index_scientific,count=c(256,1,1,1))
+
+	SCIENTIFIC_CALIB_EQUATION=str_pad(scientific_equation,256,"right")
+
+	ncvar_put(filenc,"SCIENTIFIC_CALIB_EQUATION",SCIENTIFIC_CALIB_EQUATION,start=index_scientific,count=c(256,1,1,1))
+
+#	Scientific calib date
+	ncvar_put(filenc,"SCIENTIFIC_CALIB_DATE",date_update[i],start=index_scientific,count=c(14,1,1,1))
+
+
 #####################################################################################
 # History Section
 #####################################################################################
@@ -320,7 +347,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V1.0"
+	HISTORY_SOFTWARE_RELEASE="V1.1"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 

@@ -39,13 +39,15 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
 } else {
 
-	DOXY_ADJUSTED=DOXY
+	FLAG_CTD=FALSE	
+
+	DOXY_ADJUSTED=rep(NA,length(DOXY))
 	
-	ERROR_DOXY=PPOX_ERROR
+	ERROR_DOXY=rep(NA,length(DOXY))
 
 }
 
-result=(list(DOXY=DOXY_ADJUSTED,DOXY_ERROR=ERROR_DOXY))
+result=(list(DOXY=DOXY_ADJUSTED,DOXY_ERROR=ERROR_DOXY,FLAG_CTD=FLAG_CTD))
 
 return(result)
 
