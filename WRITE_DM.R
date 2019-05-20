@@ -221,7 +221,7 @@ for (i in seq(1,length(LIST_nc))) {
         ## Check how many QC should be set/change
         
         N_QC=nchar(PARAM_ADJUSTED_QC[i_prof_param]) ## NUMBER OF QC for the PARAM
-	print(N_QC)
+
 
 	if ( CORRECTION_TYPE[i] == "AD" & N_QC > 0 ) {
 
@@ -234,15 +234,13 @@ for (i in seq(1,length(LIST_nc))) {
 				substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
 			}
 
-			if (QC_test == "4") {  ## Fill value for QC=4 
+			if (QC_test == "4") {  ## Fill value for QC=4 and QC=9
 
 				PARAM_ADJUSTED[j,i_prof_param]=NA
 
 				PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
 
 			}
-
-			if (!FLAG_CTD) substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character("4") 
 
 		}
 

@@ -27,15 +27,22 @@ if ( DATA_MODE_CTD == "R" ) {
 }
 
 #### CTD is always the 1st profile of the nc
+if (filenc_core$dim$N_PROF$len == 1 ) {
 
-#PSAL_CTD=PSAL[,1]
-#TEMP_CTD=TEMP[,1]
-#PRES_CTD=PRES[,1]
+        PSAL_CTD=PSAL
+        TEMP_CTD=TEMP
+        PRES_CTD=PRES
 
-##### Return
+} else {
 
-#result=(list(PRES=PRES_CTD,PSAL=PSAL_CTD,TEMP=TEMP_CTD))
-result=(list(PRES=PRES,PSAL=PSAL,TEMP=TEMP))
+        PSAL_CTD=PSAL[,1]
+        TEMP_CTD=TEMP[,1]
+        PRES_CTD=PRES[,1]
+
+}
+
+result=(list(PRES=PRES_CTD,PSAL=PSAL_CTD,TEMP=TEMP_CTD))
+#result=(list(PRES=PRES,PSAL=PSAL,TEMP=TEMP))
 return(result)
 
 }
