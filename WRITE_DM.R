@@ -220,10 +220,11 @@ for (i in seq(1,length(LIST_nc))) {
 
         ## Check how many QC should be set/change
         
-        N_QC=nchar(PARAM_ADJUSTED_QC[i_prof_param]) ## NUMBER OF QC for the PARAM
+	N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
+	if ( N_QC > 0 ) { 
 
-	if ( CORRECTION_TYPE[i] == "AD" & N_QC > 0 ) {
+	if ( CORRECTION_TYPE[i] == "AD" ) {
 
 		for (j in seq(1,N_QC)) {
 
@@ -234,7 +235,7 @@ for (i in seq(1,length(LIST_nc))) {
 				substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
 			}
 
-			if (QC_test == "4") {  ## Fill value for QC=4 and QC=9
+			if ( QC_test == "4" ) {  ## Fill value for QC=4 and QC=9
 
 				PARAM_ADJUSTED[j,i_prof_param]=NA
 
@@ -250,6 +251,8 @@ for (i in seq(1,length(LIST_nc))) {
 
 			substr(PARAM_ADJUSTED_QC[i_prof_param], j , j) <- as.character(PARAM_ADJUSTED_QC_value[i])
 		}
+
+	}
 
 	}
 
@@ -374,15 +377,12 @@ for (i in seq(1,length(LIST_nc))) {
 # "D" -> 25% <= N < 50%
 # "E" -> 0% <= N < 25%
 # "F" -> N=0%; no profile levels have good data
-	
-# initialisation	
+
+# Initialisation
 	N_good=0
  
 # We are working on PARAM_ADJUSTED_QC[i_prof_param]
 	PROFILE_PARAM_QC=ncvar_get(filenc,PROFILE_PARAM_QC_name)
-
-# we need the number of levels to calculate the total
-	N_QC_tot = nchar(PARAM_ADJUSTED_QC[i_prof_param]) 
 
 # Split the string to count 
 	QC=unlist(strsplit(PARAM_ADJUSTED_QC[i_prof_param],split=""))
@@ -392,7 +392,21 @@ for (i in seq(1,length(LIST_nc))) {
 	N_QC_5=length(which(QC == "5"))
 	N_QC_8=length(which(QC == "8"))
 
-	N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC_tot
+
+	if ( N_QC != 0) {
+ 
+		N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC
+
+	} else {
+
+		N_QC_tot=nchar(PARAM_ADJUSTED_QC[i_prof_param])		
+		N_QC_9=length(which(QC == "9"))
+		if ( N_QC_tot == N_QC_9 ) N_good = -99
+
+	}
+
+	
+	if ( N_good == -99) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-" "
 
 	if ( N_good == 0) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"F"
 
