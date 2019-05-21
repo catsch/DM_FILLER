@@ -93,6 +93,8 @@ metadatafile=as.character(input$metadata_file)
 #####################################################################################
 for (i in seq(1,length(LIST_nc))) {
 
+	print(i)
+
 	FLAG_CTD=TRUE
 
 	IDnc=as.character(LIST_nc[i])
@@ -124,11 +126,10 @@ for (i in seq(1,length(LIST_nc))) {
 
 	PROFILE_PARAM_QC_name=paste("PROFILE_",PARAM_name[i],"_QC",sep="")
 
-####################################################################################
-#### Work on index of the correction 
-#### We should get information from PARAMETER which is the list of PARAMETER 
-#### with CALIBRATION information 
-####################################################################################
+###################################################################################
+####    Read the file
+###################################################################################
+
 	PARAMETER=ncvar_get(filenc,"PARAMETER")
 
 	index_param=which(PARAMETER == PARAM_STRING , arr.ind=TRUE)
@@ -140,25 +141,32 @@ for (i in seq(1,length(LIST_nc))) {
 	next
 	}
 
-	i_param_param =index_param[,1]
-
-	i_calib_param =index_param[,2]  # Check how N-CALIB increases CATSCHM
-
-	i_prof_param = index_param[,3]
-
-# build the index to write the scientific_calib_comment at the right place 
-	index_scientific=append(index_param,1,after=0)
-
-####################################################################################
-# PARAM_ADJUSTED Estimation
-####################################################################################
-	# Please Check that we should work on Raw data and not on Adjusted Data but it could be an issue for quenching and factor 2 CATSCHM
 
 	PARAM=ncvar_get(filenc,as.character(PARAM_name[i]))
 
 	PARAM_ADJUSTED=ncvar_get(filenc,as.character(PARAM_ADJUSTED_name))
 
 	PARAM_ADJUSTED_ERROR=ncvar_get(filenc,as.character(PARAM_ADJUSTED_ERROR_name))
+
+	PROFILE_PARAM_QC=ncvar_get(filenc,PROFILE_PARAM_QC_name)
+
+	PARAMETER_DATA_MODE=ncvar_get(filenc,"PARAMETER_DATA_MODE")
+
+
+	if ( PARAM_name[i] == "DOXY" ) {
+
+		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
+
+	} else {
+
+		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)
+
+	}
+
+####################################################################################
+# PARAM_ADJUSTED Estimation
+####################################################################################
+	# Please Check that we should work on Raw data and not on Adjusted Data but it could be an issue for quenching and factor 2 CATSCHM
 
 	if ( CORRECTION_TYPE[i] == "AD" ) {
 
@@ -173,7 +181,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 	# get the actual date in the profile file 
 
-		profile_date_juld=ncvar_get(filenc,"JULD",start=c(i_prof_param),count=c(1))
+		profile_date_juld=unique(ncvar_get(filenc,"JULD"))
 
 	# For DOXY we need to go through the adjustment of PPOX_DOXY 
 
@@ -204,23 +212,38 @@ for (i in seq(1,length(LIST_nc))) {
 
 	}
 
+
+####################################################################################
+#### Work on index of the correction 
+#### We should get information from PARAMETER which is the list of PARAMETER 
+#### with CALIBRATION information 
+####################################################################################
+	
+	for ( irow in seq(1,nrow(index_param))) {
+
+		i_param_param =index_param[irow,1]
+		
+		i_calib_param =index_param[irow,2]	# Check how N-CALIB increases CATSCHM
+
+		i_prof_param = index_param[irow,3]
+
+		index_scientific=append(index_param[irow,],1,after=0) # build the index to write the scientific_calib_comment at the right place 
+
+
 ####################################################################################
 # PARAM_ADJUSTED_QC MODIFICATION
 ####################################################################################
+        ## Check how many QC should be set/change
 
-	if ( PARAM_name[i] == "DOXY" ) {
+	if ((i_prof_param == 1) && nrow(index_param) == 1 ) {
 
-		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
+		N_QC= length(which(!is.na(PARAM)))
 
 	} else {
-
-		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)
+       
+		N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
 	}
-
-        ## Check how many QC should be set/change
-        
-	N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
 	if ( N_QC > 0 ) { 
 
@@ -237,9 +260,18 @@ for (i in seq(1,length(LIST_nc))) {
 
 			if ( QC_test == "4" ) {  ## Fill value for QC=4 and QC=9
 
-				PARAM_ADJUSTED[j,i_prof_param]=NA
+				if (i_prof_param == 1 && nrow(index_param) == 1 ) {
 
-				PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+					PARAM_ADJUSTED[j]=NA
+
+					PARAM_ADJUSTED_ERROR[j]=NA
+				
+				} else {
+
+					PARAM_ADJUSTED[j,i_prof_param]=NA
+
+					PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+				}
 
 			}
 
@@ -255,21 +287,6 @@ for (i in seq(1,length(LIST_nc))) {
 	}
 
 	}
-
-
-###     Enter the Adjusted _QC in the file 
-
-	ncvar_put(filenc,PARAM_ADJUSTED_QC_name,PARAM_ADJUSTED_QC)
-
-###	Enter the Adjustment in the File (We move this here for isolated FLAG "4" set to NA)
-	
-	ncvar_put(filenc,PARAM_ADJUSTED_name,PARAM_ADJUSTED)
-
-	ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
-
-
-
-
 
 
 ####################################################################################
@@ -359,14 +376,6 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 #####################################################################################
-# DATE UPDATE 
-#####################################################################################
-
-###     DATE_UPDATE 
-	ncvar_put(filenc,"DATE_UPDATE",date_update[i])
-
-
-#####################################################################################
 # PROFILE_PARAM_QC Calculation 
 #####################################################################################
 #### Definition
@@ -381,9 +390,6 @@ for (i in seq(1,length(LIST_nc))) {
 # Initialisation
 	N_good=0
  
-# We are working on PARAM_ADJUSTED_QC[i_prof_param]
-	PROFILE_PARAM_QC=ncvar_get(filenc,PROFILE_PARAM_QC_name)
-
 # Split the string to count 
 	QC=unlist(strsplit(PARAM_ADJUSTED_QC[i_prof_param],split=""))
 
@@ -420,9 +426,6 @@ for (i in seq(1,length(LIST_nc))) {
 
 	if ( N_good == 100 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"A"
 
-###    Enter the PROFILE_QC in the file 
-
-	ncvar_put(filenc,PROFILE_PARAM_QC_name,PROFILE_PARAM_QC)
 
 #####################################################################################
 # DATA_MODE / PARAMETER_DATA_MODE / DATA_STATE_INDICATOR
@@ -431,23 +434,49 @@ for (i in seq(1,length(LIST_nc))) {
 # are linked to i_prof_param while we are not doing D for CDOM, BBP700 and CHLA 
 # at the same time CATSCHM
 #####################################################################################
+
 	# We perform DM QC on the profile i_prof so DATA_MODE should be set to D
 	# For the good i_prof 
-	 ncvar_put(filenc,"DATA_MODE","D",start=c(i_prof_param),count=c(1))
+	ncvar_put(filenc,"DATA_MODE","D",start=c(i_prof_param),count=c(1))
 
-	# We perform DM QC on the i_param of the profile i_prof so PARAMETER_DATA_MODE 
-	# should be set to D For the good i_prof and i_param 
-	PARAMETER_DATA_MODE=ncvar_get(filenc,"PARAMETER_DATA_MODE")
-
-	substr(PARAMETER_DATA_MODE[i_prof_param],i_param_param,i_param_param)<-"D"
-
-	ncvar_put(filenc,"PARAMETER_DATA_MODE",PARAMETER_DATA_MODE)
+	substr(PARAMETER_DATA_MODE[i_prof_param],i_param_param,i_param_param)<-"D"	
 
 	# We perform DM QC on the profile i_prof but it still can be improved 
 	# so we should put DATA_STATE_INDICATOR as 2C for i_prof
 	 ncvar_put(filenc,"DATA_STATE_INDICATOR","2C  ",start=c(1,i_prof_param),count=c(4,1))
 
+
+	} # End loop on irow 
+
+###     Enter the Adjusted _QC in the file 
+
+	ncvar_put(filenc,PARAM_ADJUSTED_QC_name,PARAM_ADJUSTED_QC)
+
+###	Enter the Adjustment in the File (We move this here for isolated FLAG "4" set to NA)
+	
+	ncvar_put(filenc,PARAM_ADJUSTED_name,PARAM_ADJUSTED)
+
+	ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
+
+###    Enter the PROFILE_QC in the file 
+
+	ncvar_put(filenc,PROFILE_PARAM_QC_name,PROFILE_PARAM_QC)
+
+###     ENTER the PARAMETER_DATA_MODE	
+
+	ncvar_put(filenc,"PARAMETER_DATA_MODE",PARAMETER_DATA_MODE)
+
+#####################################################################################
+# DATE UPDATE 
+#####################################################################################
+
+###     DATE_UPDATE 
+	ncvar_put(filenc,"DATE_UPDATE",date_update[i])
+
+
 ######### Close the Files 
+	
+
 	nc_close(filenc)
 
 	nc_close(filenc_meta)
