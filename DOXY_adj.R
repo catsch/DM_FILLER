@@ -29,7 +29,7 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 	# calculate PPOX_DOXY in mbar from DOXY in micromol/kg
 	PPOX_DOXY=DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
 
-	PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE*PPOX_DOXY+OFFSET)
+	PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE*PPOX_DOXY)+OFFSET
 
 	# calculate DOXY in micromol/kg from PPOX_DOXY in mbar
 	DOXY_ADJUSTED=PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)

@@ -3,7 +3,8 @@
 #       Catherine Schmechtig 2018 July 	
 #
 #	V1.0 20190503 : Initial version	
-#	V1.1 20190517 : robust to CTD 	      
+#	V1.1 20190517 : robust to CTD
+#       V1.2 20190628 : OFFSET for DOXY out of drift 	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset	
 #	-Change the QC
@@ -307,7 +308,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 		if ( PARAM_name[i] == "DOXY" ) {
 
-			scientific_equation=paste("PPOX_ADJUSTED=(PPOX*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+			scientific_equation=paste("PPOX_ADJUSTED=OFFSET+(PPOX*SLOPE)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
 
 			if (!FLAG_CTD) {
 
@@ -365,7 +366,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V1.1"
+	HISTORY_SOFTWARE_RELEASE="V1.2"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 
@@ -407,7 +408,9 @@ for (i in seq(1,length(LIST_nc))) {
 
 		N_QC_tot=nchar(PARAM_ADJUSTED_QC[i_prof_param])		
 		N_QC_9=length(which(QC == "9"))
+		N_QC_B=length(which(QC == " "))
 		if ( N_QC_tot == N_QC_9 ) N_good = -99
+	 	if ( N_QC_tot == N_QC_9+N_QC_B ) N_good = -99
 
 	}
 
