@@ -13,6 +13,8 @@ atm_press=1 # in atm
 xO2 <- 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
 Vm  <- 0.317 # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
 R   <- 8.314 # universal gas constant in J mol-1 K-1
+a_pCoef2 <- 0.00022 # DO 4330
+a_pCoef3 <- 0.0419  # DO 4330
 
 #######################################################
 ## PPOX_DOXY en atm
@@ -34,7 +36,13 @@ sca_T=log((298.15-TEMP_DOXY)/(273.15+TEMP_DOXY))
 TCorr <- 44.6596*(exp(2.00907+3.22014*sca_T+4.05010*sca_T^2+4.94457*sca_T^3-2.56847e-1*sca_T^4+3.88767*sca_T^5))
 Scorr <- exp(PSAL_DOXY*(-6.24523e-3-7.37614e-3*sca_T-1.03410e-2*sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*PSAL_DOXY^2)
 
-DOXY=PPOX*(TCorr*Scorr)/(exp(Vm*PRES_DOXY/(R*(TEMP_DOXY+273.15)))*(xO2*(atm_press-pH2Osatsal))) # (DOXY en micromol / l)
+DOXY_cp=PPOX*(TCorr*Scorr)/(exp(Vm*PRES_DOXY/(R*(TEMP_DOXY+273.15)))*(xO2*(atm_press-pH2Osatsal))) # (DOXY en micromol / l)
+
+##########################################################
+# Invert the Pressure effect
+##########################################################
+
+DOXY = DOXY_cp * (1 + ((a_pCoef2 *TEMP_DOXY ) + a_pCoef3) * PRES_DOXY /1000)
 
 DOXY_DOXY=DOXY*1000/swRho_DOXY  # DOXY en micromol / kg
 

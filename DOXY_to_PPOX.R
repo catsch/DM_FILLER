@@ -13,6 +13,10 @@ atm_press=1 # in atm
 xO2 <- 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
 Vm  <- 0.317 # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
 R   <- 8.314 # universal gas constant in J mol-1 K-1
+a_pCoef2 <- 0.00022 # DO 4330
+a_pCoef3 <- 0.0419  # DO 4330
+
+
 
 #######################################################
 # Density conversion -> To check
@@ -22,7 +26,14 @@ swRho_DOXY=swRho(PSAL_DOXY, TEMP_DOXY, PRES_DOXY)
 DOXY=DOXY_DOXY*swRho_DOXY/1000 # (DOXY en micromol / l)
 
 ########################################################
+# Pressure correction 
+########################################################
+DOXY_cp=DOXY/( 1 + ((a_pCoef2 * TEMP_DOXY) + a_pCoef3) * PRES_DOXY/1000) 
 
+##########111###############################################
+# PPOX Calculation
+#########################################################
+ 
 pH2Osatsal =   exp(24.4543-(67.4509*(100/(TEMP_DOXY+273.15)))-(4.8489*log(((273.15+TEMP_DOXY)/100)))-0.000544*PSAL_DOXY) # in atm
 
 sca_T=log((298.15-TEMP_DOXY)/(273.15+TEMP_DOXY))
@@ -32,7 +43,7 @@ TCorr <- 44.6596*(exp(2.00907+3.22014*sca_T+4.05010*sca_T^2+4.94457*sca_T^3-2.56
 Scorr <- exp(PSAL_DOXY*(-6.24523e-3-7.37614e-3*sca_T-1.03410e-2*sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*PSAL_DOXY^2)
 
 
-PPOX=1013.25*DOXY*(xO2*(atm_press-pH2Osatsal))/(TCorr*Scorr)*exp(Vm*PRES_DOXY/(R*(TEMP_DOXY+273.15))) # en mbar
+PPOX=1013.25*DOXY_cp*(xO2*(atm_press-pH2Osatsal))/(TCorr*Scorr)*exp(Vm*PRES_DOXY/(R*(TEMP_DOXY+273.15))) # en mbar
 
 return(PPOX)
 
