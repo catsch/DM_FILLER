@@ -41,9 +41,13 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
 	FLAG_CTD=FALSE	
 
-	DOXY_ADJUSTED=rep(NA,length(DOXY))
+	# DOXY_ADJUSTED=rep(NA,length(DOXY))
+
+	DOXY_ADJUSTED=replace(DOXY,!is.na(DOXY),NA)
+
+	# ERROR_DOXY=rep(NA,length(DOXY))
 	
-	ERROR_DOXY=rep(NA,length(DOXY))
+	ERROR_DOXY=replace(DOXY,!is.na(DOXY),NA)
 
 }
 

@@ -4,7 +4,8 @@
 #
 #	V1.0 20190503 : Initial version	
 #	V1.1 20190517 : robust to CTD
-#       V1.2 20190628 : OFFSET for DOXY out of drift 	      
+#       V1.2 20190628 : OFFSET for DOXY out of drift 
+#	V1.3 20200325 : Correct an issue on QC index	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset	
 #	-Change the QC
@@ -199,7 +200,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 		} else {
 
-			PARAM_ADJUSTED=as.numeric((1.+DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))*(SLOPE[i]*PARAM+OFFSET[i])
+			PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
 			PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
 
@@ -239,10 +240,14 @@ for (i in seq(1,length(LIST_nc))) {
 	if ((i_prof_param == 1) && nrow(index_param) == 1 ) {
 
 		N_QC= length(which(!is.na(PARAM)))
+		
+		index_qc=which(!is.na(PARAM))
 
 	} else {
        
 		N_QC=length(which(!is.na(PARAM[,i_prof_param])))
+
+		index_qc=which(!is.na(PARAM[,i_prof_param]))
 
 	}
 
@@ -250,7 +255,9 @@ for (i in seq(1,length(LIST_nc))) {
 
 	if ( CORRECTION_TYPE[i] == "AD" ) {
 
-		for (j in seq(1,N_QC)) {
+		for (i_qc in seq(1,N_QC)) {
+
+			j=index_qc[i_qc]
 
 			QC_test=substr(PARAM_ADJUSTED_QC[i_prof_param], j, j)
 
@@ -280,7 +287,9 @@ for (i in seq(1,length(LIST_nc))) {
 
 	} else {
 
-		for (j in seq(1,N_QC)) {
+		for (i_qc in seq(1,N_QC)) {
+
+			j=index_qc[i_qc]
 
 			substr(PARAM_ADJUSTED_QC[i_prof_param], j , j) <- as.character(PARAM_ADJUSTED_QC_value[i])
 		}
@@ -320,7 +329,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 		} else {
 
-			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)+(DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
 
 		}
 
@@ -366,7 +375,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V1.2"
+	HISTORY_SOFTWARE_RELEASE="V1.4"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 
