@@ -261,7 +261,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 			QC_test=substr(PARAM_ADJUSTED_QC[i_prof_param], j, j)
 
-			if ( ( QC_test == "3") || ( QC_test == "2") || (QC_test == " ") ) { # To check
+			if ( ( QC_test == "3") || ( QC_test == "2") || (QC_test == " ") || ( QC_test == "1") ) { # To check
 
 				substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
 			}
