@@ -266,7 +266,7 @@ for (i in seq(1,length(LIST_nc))) {
 				substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
 			}
 
-			if ( QC_test == "4" ) {  ## Fill value for QC=4 and QC=9
+			if ( ( QC_test == "4" ) || ( PARAM_ADJUSTED_QC_value[i] == "4" ) ) {  ## Fill value for QC=4 and QC=9
 
 				if (i_prof_param == 1 && nrow(index_param) == 1 ) {
 
