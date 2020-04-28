@@ -155,7 +155,7 @@ for (i in seq(1,length(LIST_nc))) {
 	PARAMETER_DATA_MODE=ncvar_get(filenc,"PARAMETER_DATA_MODE")
 
 
-	if ( PARAM_name[i] == "DOXY" ) {
+	if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") ) {
 
 		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
 
