@@ -291,9 +291,6 @@ for (i in seq(1,length(LIST_nc))) {
 
 	}
 
-	print(FLAG_QUENCHING)
-	print(CHLA_INDEX_NPQ)
-
 	if ( N_QC > 0 ) { 
 
 	if ( CORRECTION_TYPE[i] == "AD" ) {
@@ -477,6 +474,11 @@ for (i in seq(1,length(LIST_nc))) {
 ### 	HISTORY_ACTION (Change Value CV - I don't know If I should also said CF)
 	HISTORY_ACTION="CV  "
 	ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+###	HISTORY_PARAMETER 
+	HISTORY_PARAMETER=PARAM_STRING
+	ncvar_put(filenc,"HISTORY_PARAMETER",HISTORY_PARAMETER,start=c(1,i_prof_param,i_history),count=c(64,1,1))
+
 
 #####################################################################################
 # PROFILE_PARAM_QC Calculation 

@@ -1,5 +1,7 @@
 CHLA_adj_XX <- function ( filenc_core, filenc, PARAM_name, OFFSET, SLOPE, ERROR ){
 
+FLAG_BAD=FALSE
+
 #### READ Core file 
 
 CTD=read_CTD(filenc_core)
@@ -12,9 +14,17 @@ CTD=read_CTD(filenc_core)
 
 CHLA=ncvar_get(filenc,as.character(PARAM_name))
 
+CHLA_QC=ncvar_get(filenc,"CHLA_QC")
+
 DOWNWELLING_PAR=ncvar_get(filenc,"DOWNWELLING_PAR")
 
 PRES=ncvar_get(filenc,"PRES")
+
+### Are there any good data ?
+
+QC=unlist(strsplit(CHLA_QC,split=""))
+
+if( length(which(QC !="4" & QC != " ")) == 0 ) FLAG_BAD = TRUE
 
 ### Correct the CHLA from the Dark Count
 
@@ -56,7 +66,7 @@ if (length(which(PRES_CHLA<min(ipar_15_depth,MLD))) != 0 ) {
 
 	INDEX_NPQ=max(which(CHLA_X12==CHLA_NPQ))
 
-	if ( is.integer(INDEX_NPQ) && length(INDEX_NPQ) != 0 ) FLAG_QUENCHING=TRUE
+	if ( is.integer(INDEX_NPQ) && length(INDEX_NPQ) != 0 && FLAG_BAD != TRUE ) FLAG_QUENCHING=TRUE
 
 	# building the CHLA_ADJUSTED profile
 
@@ -76,7 +86,7 @@ CHLA_ADJUSTED=SLOPE*CHLA_ADJUSTED
 
 # Estimating the Error
 
-ERROR_CHLA=0.25*abs(CHLA_ADJUSTED-CHLA)+ERROR
+ERROR_CHLA=0.25*abs(CHLA_ADJUSTED-CHLA/2.)+ERROR
 
 result=(list(CHLA=CHLA_ADJUSTED,CHLA_ERROR=ERROR_CHLA,CHLA_INDEX_NPQ=INDEX_NPQ,FLAG_QUENCHING=FLAG_QUENCHING))
 

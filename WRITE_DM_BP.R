@@ -1,13 +1,14 @@
 #######################################################################################
 #	This program is designed to modify a BR file into BD file
 #       
-#       Catherine Schmechtig 2020 May  	
+#       Catherine Schmechtig 2020 August  	
 #
 #	V1.0 20190503 : Initial version	
 #	V1.1 20190517 : robust to CTD
 #       V1.2 20190628 : OFFSET for DOXY out of drift 
 #	V1.3 20200325 : Correct an issue on QC index
-#	V2.0 20200515 : Add Break points in the drift estimation 	      
+#	V2.0 20200515 : Add Break points in the drift estimation
+#	V2.1 20200819 : Add HISTORY PARAMETER 	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -22,6 +23,7 @@
 #		-HISTORY_SOFTWARE (if applicable)
 #		-HISTORY_SOFTWARE_RELEASE (if applicable)		
 #		-HISTORY_ACTION (Table 7) 
+#		-HISTORY_PARAMETER
 #					
 #	-Change the SCIENTIFIC_CALIB_xxx Section
 #		-SCIENTIFIC_CALIB_COMMENT
@@ -399,7 +401,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V1.4"
+	HISTORY_SOFTWARE_RELEASE="V2.0"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 
@@ -408,6 +410,10 @@ for (i in seq(1,length(LIST_nc))) {
 ### 	HISTORY_ACTION (Change Value CV - I don't know If I should also said CF)
 	HISTORY_ACTION="CV  "
 	ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+###     HISTORY_PARAMETER 
+        HISTORY_PARAMETER=PARAM_STRING
+        ncvar_put(filenc,"HISTORY_PARAMETER",HISTORY_PARAMETER,start=c(1,i_prof_param,i_history),count=c(64,1,1))
 
 #####################################################################################
 # PROFILE_PARAM_QC Calculation 
