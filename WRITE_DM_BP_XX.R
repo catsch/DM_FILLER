@@ -216,7 +216,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 			if ( PARAM_name[i] == "NITRATE" ) {
 
-				PARAM_ADJUSTED=as.numeric(PARAM-(OFFSET[i]+DRIFT[i]*as.numeric(CYCLE_NUMBER)))
+				PARAM_ADJUSTED=(PARAM-(OFFSET[i]+DRIFT[i]*as.numeric(CYCLE_NUMBER)))
 
 				PARAM_ADJUSTED_ERROR=(abs(PARAM_ADJUSTED-PARAM)*0.1+ERROR[i])
 
