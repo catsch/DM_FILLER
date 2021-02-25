@@ -1,14 +1,15 @@
 #######################################################################################
 #	This program is designed to modify a BR file into BD file
 #       
-#       Catherine Schmechtig 2020 August  	
+#       Catherine Schmechtig 2021 February 	
 #
 #	V1.0 20190503 : Initial version	
 #	V1.1 20190517 : robust to CTD
 #       V1.2 20190628 : OFFSET for DOXY out of drift 
 #	V1.3 20200325 : Correct an issue on QC index
 #	V2.0 20200515 : Add Break points in the drift estimation
-#	V2.1 20200819 : Add HISTORY PARAMETER 	      
+#	V2.1 20200819 : Add HISTORY PARAMETER
+#	V2.2 20210219 : Estimate NITRATE_ADJUSTED_ERROR from DOXY_ADJUSTED_ERROR 	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -46,6 +47,7 @@ source("./READ_CTD.R")
 source("./PPOX_to_DOXY.R")
 source("./DOXY_to_PPOX.R")
 source("./DOXY_adj.R")
+source("./NITRATE_ERROR_ESTIMATION.R")
 
 uf=commandArgs()
 
@@ -210,7 +212,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
-				PARAM_ADJUSTED_ERROR=(abs(PARAM_ADJUSTED-PARAM)*0.1+ERROR[i])
+				PARAM_ADJUSTED_ERROR=NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
 
 
 			} else {
@@ -401,7 +403,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V2.0"
+	HISTORY_SOFTWARE_RELEASE="V2.2"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 

@@ -39,6 +39,14 @@ if (filenc_core$dim$N_PROF$len == 1 ) {
         TEMP_CTD=TEMP[,1]
         PRES_CTD=PRES[,1]
 
+	if( is.na(PSAL[,1]) & !is.na(PSAL[,2]) ) {	# Get the discrete CTD profiles to adjust doxy
+
+        	PSAL_CTD=PSAL[,2]
+        	TEMP_CTD=TEMP[,2]
+        	PRES_CTD=PRES[,2]
+
+	}
+
 }
 
 result=(list(PRES=PRES_CTD,PSAL=PSAL_CTD,TEMP=TEMP_CTD))
