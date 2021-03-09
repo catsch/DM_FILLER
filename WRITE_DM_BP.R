@@ -227,7 +227,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 		} else if ( PARAM_name[i] == "CHLA" ) {
 
-			PARAM_ADJUSTED=as.numeric((SLOPE[i]*PARAM_ADJUSTED))
+			PARAM_ADJUSTED=as.numeric(SLOPE[i])*PARAM_ADJUSTED
 
 			PARAM_ADJUSTED_ERROR=CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],index_param)
 
