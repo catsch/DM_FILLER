@@ -1,7 +1,7 @@
 #######################################################################################
 #	This program is designed to modify a BR file into BD file
 #       
-#       Catherine Schmechtig 2021 February 	
+#       Catherine Schmechtig 2021 March 	
 #
 #	V1.0 20190503 : Initial version	
 #	V1.1 20190517 : robust to CTD
@@ -9,7 +9,8 @@
 #	V1.3 20200325 : Correct an issue on QC index
 #	V2.0 20200515 : Add Break points in the drift estimation
 #	V2.1 20200819 : Add HISTORY PARAMETER
-#	V2.2 20210219 : Estimate NITRATE_ADJUSTED_ERROR from DOXY_ADJUSTED_ERROR 	      
+#	V2.2 20210219 : Estimate NITRATE_ADJUSTED_ERROR from DOXY_ADJUSTED_ERROR
+#	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR  	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -48,6 +49,8 @@ source("./PPOX_to_DOXY.R")
 source("./DOXY_to_PPOX.R")
 source("./DOXY_adj.R")
 source("./NITRATE_ERROR_ESTIMATION.R")
+source("./PH_adj.R")
+source("./PH_ERROR_ESTIMATION.R")
 
 uf=commandArgs()
 
@@ -163,7 +166,7 @@ for (i in seq(1,length(LIST_nc))) {
 	PARAMETER_DATA_MODE=ncvar_get(filenc,"PARAMETER_DATA_MODE")
 
 
-	if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") ) {
+	if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL") ) {
 
 		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
 
@@ -197,30 +200,34 @@ for (i in seq(1,length(LIST_nc))) {
 
 		if ( PARAM_name[i] == "DOXY" ) {
 
+			DOXY_ADJ=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld )
 
-				DOXY_ADJ=DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld )
+			PARAM_ADJUSTED=DOXY_ADJ$DOXY
 
-				PARAM_ADJUSTED=DOXY_ADJ$DOXY
+			PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
 
-				PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
+			FLAG_CTD=DOXY_ADJ$FLAG_CTD
 
-				FLAG_CTD=DOXY_ADJ$FLAG_CTD
+		} else if ( PARAM_name[i] == "NITRATE" ) {	
 
-		} else {	
+			PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
-			if ( PARAM_name[i] == "NITRATE" ) {
+			PARAM_ADJUSTED_ERROR=NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
 
-				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
+		} else if ( PARAM_name[i] == "PH_IN_SITU_TOTAL" ) {
 
-				PARAM_ADJUSTED_ERROR=NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
+			PH_ADJ=PH_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld,index_param )
+			PARAM_ADJUSTED=PH_ADJ$PH
 
+			FLAG_CTD=PH_ADJ$FLAG_CTD
 
-			} else {
+			PARAM_ADJUSTED_ERROR=PH_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param,FLAG_CTD)
+
+		} else {
 
 				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
 				PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
-			}
 		}
 
 	} else {	
@@ -355,6 +362,10 @@ for (i in seq(1,length(LIST_nc))) {
 
 			}
 
+		} else if ( PARAM_name[i] == "PH_IN_SITU_TOTAL" ) {
+
+			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - delta_pH*TCOR); TCOR = (TREF+273.15)/(TEMP+273.15); TREF = TEMP at 1500m; delta_pH = OFFSET+DRIFT*(profile_date_juld-launch_date_juld)/(100*365.)")
+
 		} else {
 
 			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)+(DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
@@ -403,7 +414,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V2.2"
+	HISTORY_SOFTWARE_RELEASE="V2.3"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 

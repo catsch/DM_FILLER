@@ -43,6 +43,7 @@ echo " 2 for BBP700"
 echo " 3 for NITRATE"
 echo " 4 for CDOM"
 echo " 5 for DOXY"
+echo " 6 for PH_IN_SITU_TOTAL"
 read id_PARAM
 
 case "$id_PARAM" in
@@ -60,7 +61,10 @@ case "$id_PARAM" in
 		;; 
 	"5")
 		PARAM="DOXY"
-		;; 			
+		;; 
+	"6")
+		PARAM="PH_IN_SITU_TOTAL"
+		;;			
 esac
 
 ################################################################################
