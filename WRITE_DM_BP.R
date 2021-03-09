@@ -10,7 +10,8 @@
 #	V2.0 20200515 : Add Break points in the drift estimation
 #	V2.1 20200819 : Add HISTORY PARAMETER
 #	V2.2 20210219 : Estimate NITRATE_ADJUSTED_ERROR from DOXY_ADJUSTED_ERROR
-#	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR  	      
+#	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR
+#	V2.4 20210309 : CHLA DM with Xing's slope, Quenching from Terrats 2020 and median of minimum for Dark estimation  	      
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -51,6 +52,7 @@ source("./DOXY_adj.R")
 source("./NITRATE_ERROR_ESTIMATION.R")
 source("./PH_adj.R")
 source("./PH_ERROR_ESTIMATION.R")
+source("./CHLA_ERROR_ESTIMATION.R")
 
 uf=commandArgs()
 
@@ -172,7 +174,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 	} else {
 
-		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)
+		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_ADJUSTED_QC_name)  ## for CHLA and NITRATE
 
 	}
 
@@ -222,6 +224,13 @@ for (i in seq(1,length(LIST_nc))) {
 			FLAG_CTD=PH_ADJ$FLAG_CTD
 
 			PARAM_ADJUSTED_ERROR=PH_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param,FLAG_CTD)
+
+		} else if ( PARAM_name[i] == "CHLA" ) {
+
+			PARAM_ADJUSTED=as.numeric((SLOPE[i]*PARAM_ADJUSTED))
+
+			PARAM_ADJUSTED_ERROR=CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],index_param)
+
 
 		} else {
 
@@ -285,7 +294,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 			QC_test=substr(PARAM_ADJUSTED_QC[i_prof_param], j, j)
 
-			if ( PARAM_name[i] != "NITRATE" ) {
+			if ( PARAM_name[i] != "NITRATE" && PARAM_name[i] != "CHLA" ) {
 
 				if ( ( QC_test == "3") || ( QC_test == "2") || (QC_test == " ") || ( QC_test == "1") ) { # To check
 
@@ -366,6 +375,10 @@ for (i in seq(1,length(LIST_nc))) {
 
 			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - delta_pH*TCOR); TCOR = (TREF+273.15)/(TEMP+273.15); TREF = TEMP at 1500m; delta_pH = OFFSET+DRIFT*(profile_date_juld-launch_date_juld)/(100*365.)")
 
+		} else if ( PARAM_name[i] == "CHLA" ) {
+
+			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - OFFSET) * SLOPE ") 
+
 		} else {
 
 			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)+(DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
@@ -414,7 +427,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V2.3"
+	HISTORY_SOFTWARE_RELEASE="V2.4"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 
