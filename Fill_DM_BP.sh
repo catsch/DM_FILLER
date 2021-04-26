@@ -27,7 +27,7 @@ read id_WMO
 > "DM_list_"$id_WMO
 
 ## Header
-echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
+echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;incline;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
 
 
 #######################################################################################
@@ -118,6 +118,8 @@ case "$id_LIST" in
 		read SLOPE
 		echo " Enter the Drift"
 		read DRIFT
+		echo " Enter the incline_T for DOXY, O (for Others parameters or no Entry for this adjustment)"
+		read INCLINE_T  
 		echo "How this correction will improve the QC after the adjustment?"
 		echo " Enter"
 		echo " 1 -If the ADJUSTED "$PARAM" should be considered as GOOD (QC=1)"
@@ -140,7 +142,7 @@ case "$id_LIST" in
 					icore=`echo $icore | sed s/"profiles\/R"/"profiles\/D"/`
 				fi
 			fi
-			echo $i";"$icore";"$metadata_file";"$PARAM";AD;"$OFFSET";"$SLOPE";"$DRIFT";1;"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+			echo $i";"$icore";"$metadata_file";"$PARAM";AD;"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";1;"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
 		done  
 		;;
 	"1")
@@ -231,7 +233,7 @@ case "$id_LIST" in
 				fi
 				if [ $a -ge $ideb ] &&  [ $a -le $ifin ] 
 				then 				
-				echo $i";"$icore";"$metadata_file";"$PARAM";"$TYPE";"$OFFSET";"$SLOPE";"$DRIFT";"$N_CYCLE_BEGIN";"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+				echo $i";"$icore";"$metadata_file";"$PARAM";"$TYPE";"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";"$N_CYCLE_BEGIN";"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
 				fi
 				((a+=1))
 			done  # end loop on file to correct
