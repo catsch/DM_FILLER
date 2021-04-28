@@ -204,6 +204,8 @@ case "$id_LIST" in
 				read SLOPE
 				echo " Enter the Drift"
 				read DRIFT
+		                echo " Enter the incline_T for DOXY, O (for Others parameters or no Entry for this adjustment)"
+                		read INCLINE_T
 				echo " Enter the cycle number of the beginning of DRIFT"
 				read N_CYCLE_BEGIN
 				echo "How this correction will improve the QC after the adjustment?"
