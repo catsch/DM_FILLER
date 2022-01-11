@@ -213,6 +213,8 @@ for (i in seq(1,length(LIST_nc))) {
 
 			FLAG_CTD=DOXY_ADJ$FLAG_CTD
 
+			if (!FLAG_CTD) PARAM_ADJUSTED_QC_value[i] = "4"
+
 		} else if ( PARAM_name[i] == "NITRATE" ) {	
 
 			PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
@@ -273,17 +275,47 @@ for (i in seq(1,length(LIST_nc))) {
 ####################################################################################
         ## Check how many QC should be set/change
 
-	if ((i_prof_param == 1) && nrow(index_param) == 1 ) { # pourquoi j ai cette condition nrow(index_param)==1 ????
+	if (i_prof_param == 1 ) {
 
-		N_QC= length(which(!is.na(PARAM)))
+		if ( filenc$dim$N_LEVELS$len == 1 )  {	# prof one or one level  
+
+        		N_QC=length(which(!is.na(PARAM[1])))
+
+                	index_qc=which(!is.na(PARAM[1]))
+
+        	} else {
+
+			if ( nrow(index_param) == 1 ) {
+
+		       		 N_QC=length(which(!is.na(PARAM))) # prof one different levels
+
+                        	 index_qc=which(!is.na(PARAM)) # prof one different levels
+
+			} else {
 		
-		index_qc=which(!is.na(PARAM))
+                		N_QC=length(which(!is.na(PARAM[,i_prof_param]))) # prof one different levels
+
+                		index_qc=which(!is.na(PARAM[,i_prof_param])) # prof one different levels
+
+			}
+
+        	}
 
 	} else {
-       
-		N_QC=length(which(!is.na(PARAM[,i_prof_param])))
 
-		index_qc=which(!is.na(PARAM[,i_prof_param]))
+                if ( filenc$dim$N_LEVELS$len == 1 )  {  # prof one or one level  
+
+                        N_QC=length(which(!is.na(PARAM[i_prof_param])))
+
+                        index_qc=which(!is.na(PARAM[i_prof_param]))
+
+                } else {
+
+                        N_QC=length(which(!is.na(PARAM[,i_prof_param]))) # prof one different levels
+
+                        index_qc=which(!is.na(PARAM[,i_prof_param])) # prof one different levels
+
+                }
 
 	}
 
@@ -315,7 +347,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 			if ( ( QC_test == "4" ) || ( PARAM_ADJUSTED_QC_value[i] == "4" ) ) {  ## Fill value for QC=4 and QC=9
 
-				if (i_prof_param == 1 && nrow(index_param) == 1 ) {
+				if (i_prof_param == 1 && nrow(index_param) == 1 ) { #try || instead of &&
 
 					PARAM_ADJUSTED[j]=NA
 
@@ -323,9 +355,20 @@ for (i in seq(1,length(LIST_nc))) {
 				
 				} else {
 
-					PARAM_ADJUSTED[j,i_prof_param]=NA
+					if ( filenc$dim$N_LEVELS$len == 1 ) {
 
-					PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+						PARAM_ADJUSTED[j]=NA
+
+						PARAM_ADJUSTED_ERROR[j]=NA
+
+
+					} else {
+
+						PARAM_ADJUSTED[j,i_prof_param]=NA
+
+						PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+
+					}
 				}
 
 			}
