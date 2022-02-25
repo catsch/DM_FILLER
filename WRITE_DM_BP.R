@@ -13,6 +13,7 @@
 #	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR
 #	V2.4 20210309 : CHLA DM with Xing's slope, Quenching from Terrats 2020 and median of minimum for Dark estimation
 #	V2.5 20210416 : T_incline for DOXY  	      
+#       V2.6 20220224 : BBP700_ADJUSTED_ERROR
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -54,6 +55,7 @@ source("./NITRATE_ERROR_ESTIMATION.R")
 source("./PH_adj.R")
 source("./PH_ERROR_ESTIMATION.R")
 source("./CHLA_ERROR_ESTIMATION.R")
+source("./BBP700_ERROR_ESTIMATION.R")
 
 uf=commandArgs()
 
@@ -171,7 +173,7 @@ for (i in seq(1,length(LIST_nc))) {
 	PARAMETER_DATA_MODE=ncvar_get(filenc,"PARAMETER_DATA_MODE")
 
 
-	if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL") ) {
+	if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL")  | (PARAM_name[i] == "BBP700")) {
 
 		PARAM_ADJUSTED_QC=ncvar_get(filenc,PARAM_QC_name)
 
@@ -197,6 +199,16 @@ for (i in seq(1,length(LIST_nc))) {
 
 		launch_date_juld=as.numeric(julian(as.POSIXlt(launch_date,format="%Y%m%d%H%M%S",origin="1950-01-01"),origin="1950-01-01",TZ="GMT"))
 
+	# get the scale factor of BBP
+		if ( PARAM_name[i] == "BBP700" ) {
+
+			PREDEPLOYMENT_CALIB_COEFFICIENT=ncvar_get(filenc_meta,"PREDEPLOYMENT_CALIB_COEFFICIENT")
+
+			CALIB_BBP700=str_split(str_subset(PREDEPLOYMENT_CALIB_COEFFICIENT,"SCALE_BACKSCATTERING700"),",")
+
+			scale_BBP700=as.numeric(str_replace(str_subset(CALIB_BBP700[[1]],"SCALE_BACKSCATTERING700"),"SCALE_BACKSCATTERING700="," "))
+
+		} 
 	# get the actual date in the profile file 
 
 		profile_date_juld=unique(ncvar_get(filenc,"JULD"))
@@ -236,12 +248,18 @@ for (i in seq(1,length(LIST_nc))) {
 
 			PARAM_ADJUSTED_ERROR=CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i])
 
+		} else if ( PARAM_name[i] == "BBP700" ) {
+
+			PARAM_ADJUSTED=(PARAM-as.numeric(OFFSET[i]))*as.numeric(SLOPE[i])
+
+			PARAM_ADJUSTED_ERROR=BBP700_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],scale_BBP700)
 
 		} else {
 
-				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
+			PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
-				PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
+			PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
+
 		}
 
 	} else {	
@@ -424,7 +442,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - delta_pH*TCOR); TCOR = (TREF+273.15)/(TEMP+273.15); TREF = TEMP at 900dbars; delta_pH = OFFSET+DRIFT*(profile_date_juld-launch_date_juld)/(100*365.)")
 
-		} else if ( PARAM_name[i] == "CHLA" ) {
+		} else if ( PARAM_name[i] == "CHLA" | PARAM_name[i] == "BBP700" ) {
 
 			scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - OFFSET) * SLOPE ") 
 
@@ -476,7 +494,7 @@ for (i in seq(1,length(LIST_nc))) {
 	ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-	HISTORY_SOFTWARE_RELEASE="V2.5"
+	HISTORY_SOFTWARE_RELEASE="V2.6"
 	ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
 
 ###     HISTORY_DATE (Same as Date update) 

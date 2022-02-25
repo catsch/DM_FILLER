@@ -21,9 +21,9 @@ i_prof_param=index_param[,3]
 
 if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
-	if ( max(CTD$PRES,na.rm=TRUE) > 1500 ) {
+	if ( max(CTD$PRES,na.rm=TRUE) > 900 ) {
 
-		TREF=CTD$TEMP[which.min(abs(CTD$PRES-1500))]
+		TREF=CTD$TEMP[which.min(abs(CTD$PRES-900))]
 
 	} else {
 

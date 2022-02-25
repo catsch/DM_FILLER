@@ -14,7 +14,7 @@ if ( length(which(!is.na(DOXY_ADJUSTED_ERROR)))>1 ) {
 
 } else {
 
-	NITRATE_ADJUSTED_ERROR[,i_prof_param]=ERROR+0.1*abs(NITRATE-NITRATE_ADJUSTED)
+	NITRATE_ADJUSTED_ERROR[,i_prof_param]=ERROR+0.1*abs(NITRATE[,i_prof_param]-NITRATE_ADJUSTED[,i_prof_param])
 
 }
 

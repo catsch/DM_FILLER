@@ -20,7 +20,7 @@ if (!FLAG_CTD) {
 
 	} else {
 
-		PH_IN_SITU_TOTAL_ADJUSTED_ERROR[,i_prof_param]=ERROR+0.0016*abs(PH_IN_SITU_TOTAL-PH_IN_SITU_TOTAL_ADJUSTED)
+		PH_IN_SITU_TOTAL_ADJUSTED_ERROR[,i_prof_param]=ERROR+0.0016*abs(PH_IN_SITU_TOTAL[,i_prof_param]-PH_IN_SITU_TOTAL_ADJUSTED[,i_prof_param])
 
 	}
 

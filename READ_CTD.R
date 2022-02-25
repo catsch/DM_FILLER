@@ -35,15 +35,25 @@ if (filenc_core$dim$N_PROF$len == 1 ) {
 
 } else {
 
-        PSAL_CTD=PSAL[,1]
-        TEMP_CTD=TEMP[,1]
-        PRES_CTD=PRES[,1]
+	if( all(is.na(PSAL) & length(PSAL)==2)) {
 
-	if( is.na(PSAL[,1]) & !is.na(PSAL[,2]) ) {	# Get the discrete CTD profiles to adjust doxy
+		PSAL_CTD=NA
+		TEMP_CTD=NA
+		PRES_CTD=NA
 
-        	PSAL_CTD=PSAL[,2]
-        	TEMP_CTD=TEMP[,2]
-        	PRES_CTD=PRES[,2]
+	} else { 
+
+        	PSAL_CTD=PSAL[,1]
+        	TEMP_CTD=TEMP[,1]
+        	PRES_CTD=PRES[,1]
+
+		if( all(is.na(PSAL[,1])) & all(!is.na(PSAL[,2])) ) {	# Get the discrete CTD profiles to adjust doxy
+
+        		PSAL_CTD=PSAL[,2]
+        		TEMP_CTD=TEMP[,2]
+        		PRES_CTD=PRES[,2]
+
+		}
 
 	}
 
