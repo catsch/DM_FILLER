@@ -1,6 +1,7 @@
 #' BBP700_ERROR_ESTIMATION
 #'
-#' This function estimates BPP700 error
+#' This function estimates BPP700 error according to
+#'  https://archimer.ifremer.fr/doc/00491/60262/
 #' @param filenc An object of class ncdf4 of argo bfile
 #' @param BBP700_ADJUSTED vector of adjusted bbp700 values (numeric)
 #' @param ERROR vector of bbp700 error values (numeric)
