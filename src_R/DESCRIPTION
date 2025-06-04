@@ -1,6 +1,6 @@
 Package: dm_filler
-Title: tool reporting BGC delayed mode information into argo files
-Version: 1.0
+Title: SOFTWARE Delayed Mode Filler Tool
+Version: V2.6
 Authors@R: c( 
     person(given = "Catherine",
            family = "Schmechtig",
@@ -12,7 +12,7 @@ Authors@R: c(
            role = c("aut"),
            email = "virginie.racape@pokapok.org",
            comment = c(ORCID = "0000-0003-0239-5125")))
-Description: this package fills DM for BGC variables in ARGO files according to ARGO recommandations
+Description: this package reports BGC delayed mode information into argo files according to ARGO recommandations
 License: `use_gpl3_license()` 
 Encoding: UTF-8
 LazyData: true
