@@ -2,6 +2,7 @@
 #'
 #' This function estimates oxygen adjustment according to
 #' 	https://doi.org/10.13155/46542
+#' 
 #' @param filenc_core An object of class ncdf4 of argo core file
 #' @param filenc An object of class ncdf4 of argo bfile
 #' @param PARAM_name name of the variable to be adjusted (string)
@@ -14,8 +15,10 @@
 #' @param launch_date_juld julian day value of the float launch date
 #'
 #' @return vector adjusted oxygen values (numeric)
+#'
 #' @importFrom ncdf4 ncvar_get
-#' @importFRom dm_filler read_CTD DOXY_to_PPOX PPOX_to_DOXY
+#' @importFrom dm_filler read_CTD DOXY_to_PPOX PPOX_to_DOXY
+#'
 #' @export
 #'
 DOXY_adj <- function ( filenc_core, filenc, PARAM_name, OFFSET, SLOPE, DRIFT, INCLINE_T, ERROR, profile_date_juld ,launch_date_juld ){

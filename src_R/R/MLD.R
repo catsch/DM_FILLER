@@ -8,17 +8,16 @@
 #' @param TEMP_CTD vector of temperature values at temperature pressure level
 #'
 #' @return a value of mixed layer depth in meter
-#' @importFrom oce swTheta swSigmaTheta
-#' @importFRom dm_filler read_CTD IPAR_15_DEPTH RunningFilter
+#' @importFrom dm_filler read_CTD IPAR_15_DEPTH RunningFilter
 #' @export
 #'
 MLD <- function ( PRES_CTD, PSAL_CTD , TEMP_CTD ) {
 
 MLD_LIMIT=0.03
 
-THETA=oce::swTheta(PSAL_CTD,TEMP_CTD,PRES_CTD)
+THETA=swTheta(PSAL_CTD,TEMP_CTD,PRES_CTD)
 
-POTDENS=oce::swSigmaTheta(PSAL_CTD,TEMP_CTD,PRES_CTD)
+POTDENS=swSigmaTheta(PSAL_CTD,TEMP_CTD,PRES_CTD)
 
 FLAG_BAD_POTDENS=rep(FALSE,length(PRES_CTD))
 

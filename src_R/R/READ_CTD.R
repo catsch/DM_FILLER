@@ -5,7 +5,9 @@
 #' @param filenc_core An object of class ncdf4 of argo core file
 #'
 #' @return a list of 3 vector: 1. pressure, 2. salinity, 3.temperature
+#' 
 #' @importFrom  ncdf4 ncvar_get
+#' 
 #' @export
 #'
 read_CTD <- function ( filenc_core ){

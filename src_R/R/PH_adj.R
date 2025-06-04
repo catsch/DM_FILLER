@@ -14,7 +14,7 @@
 #' @return list with vector pH adjusted values (numeric)
 #' 	and CTD flag availability (TRUE or FALSE)
 #' @importFrom ncdf4 ncvar_get
-#' @importFRom dm_filler read_CTD
+#' @importFrom dm_filler read_CTD
 #' @export
 #'
 PH_adj <- function ( filenc_core, filenc, PARAM_name, OFFSET, SLOPE, DRIFT, ERROR, profile_date_juld ,launch_date_juld, index_param ){

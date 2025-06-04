@@ -66,14 +66,14 @@
 #'
 #' @return Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
 #' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close
-#' @importFrom string str_pad str_split str_subset str_replace
-#' @importFrom dm_filler DOXY_adj NITRATE_ERROR_ESTIMATION BBP700_ERROR_ESTIMATION
+#' @importFrom stringr str_pad str_split str_subset str_replace
+#' @importFrom dm_filler DOXY_adj NITRATE_ERROR_ESTIMATION 
+#' @importFrom dm_filler BBP700_ERROR_ESTIMATION
 #' @importFrom dm_filler PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
 #' @export
 WRITE_DM_BP <- function(input_file) {
 
-
-
+  require(oce)
 	###################################################################################
 	# READ the INPUT FILE 
 	###################################################################################
@@ -157,7 +157,7 @@ WRITE_DM_BP <- function(input_file) {
 
 		PARAM_ADJUSTED_ERROR_name=paste(PARAM_ADJUSTED_name,"_ERROR",sep="")
 
-		PARAM_STRING=string::str_pad(PARAM_name[i],64,"right")
+		PARAM_STRING=stringr::str_pad(PARAM_name[i],64,"right")
 
 		PROFILE_PARAM_QC_name=paste("PROFILE_",PARAM_name[i],"_QC",sep="")
 
@@ -219,9 +219,9 @@ WRITE_DM_BP <- function(input_file) {
 
 				PREDEPLOYMENT_CALIB_COEFFICIENT=ncdf4::ncvar_get(filenc_meta,"PREDEPLOYMENT_CALIB_COEFFICIENT")
 
-				CALIB_BBP700=string::str_split(string::str_subset(PREDEPLOYMENT_CALIB_COEFFICIENT,"SCALE_BACKSCATTERING700"),",")
+				CALIB_BBP700=stringr::str_split(stringr::str_subset(PREDEPLOYMENT_CALIB_COEFFICIENT,"SCALE_BACKSCATTERING700"),",")
 
-				scale_BBP700=as.numeric(string::str_replace(string::str_subset(CALIB_BBP700[[1]],"SCALE_BACKSCATTERING700"),"SCALE_BACKSCATTERING700="," "))
+				scale_BBP700=as.numeric(stringr::str_replace(stringr::str_subset(CALIB_BBP700[[1]],"SCALE_BACKSCATTERING700"),"SCALE_BACKSCATTERING700="," "))
 
 			} 
 		# get the actual date in the profile file 
@@ -427,9 +427,9 @@ WRITE_DM_BP <- function(input_file) {
 	####################################################################################
 
 	#	scientific calib comment
-		SCIENTIFIC_CALIB_COMMENT=string::str_pad(scientific_comment[i],256,"right")
+		SCIENTIFIC_CALIB_COMMENT=stringr::str_pad(scientific_comment[i],256,"right")
 
-		if (!FLAG_CTD) SCIENTIFIC_CALIB_COMMENT=string::str_pad("no adjustment is performed because of issues in CTD",256,"right")
+		if (!FLAG_CTD) SCIENTIFIC_CALIB_COMMENT=stringr::str_pad("no adjustment is performed because of issues in CTD",256,"right")
 
 		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_COMMENT",SCIENTIFIC_CALIB_COMMENT,start=index_scientific,count=c(256,1,1,1))
 
@@ -475,11 +475,11 @@ WRITE_DM_BP <- function(input_file) {
 			
 		}
 
-		SCIENTIFIC_CALIB_COEFFICIENT=string::str_pad(scientific_coefficient,256,"right")
+		SCIENTIFIC_CALIB_COEFFICIENT=stringr::str_pad(scientific_coefficient,256,"right")
 
 		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_COEFFICIENT",SCIENTIFIC_CALIB_COEFFICIENT,start=index_scientific,count=c(256,1,1,1))
 
-		SCIENTIFIC_CALIB_EQUATION=string::str_pad(scientific_equation,256,"right")
+		SCIENTIFIC_CALIB_EQUATION=stringr::str_pad(scientific_equation,256,"right")
 
 		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_EQUATION",SCIENTIFIC_CALIB_EQUATION,start=index_scientific,count=c(256,1,1,1))
 

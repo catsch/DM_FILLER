@@ -10,7 +10,7 @@
 #' @param PPOX_DOXY vector of oxygen values in dbar at the oxygen pressure level
 #'
 #' @return vector of oxygen values in µmol/kg (numeric)
-#' @importFrom oce swRho
+#' 
 #' @export
 #'
 PPOX_to_DOXY <- function ( PRES_DOXY, TEMP_DOXY, PSAL_DOXY, PPOX_DOXY){
@@ -39,7 +39,7 @@ PPOX=PPOX_DOXY/1013.25 # PPOX en atm, PPOX_DOXY en mbar
 #######################################################
 # Density conversion -> To check
 #######################################################
-swRho_DOXY=oce::swsigma0(PSAL_DOXY, TEMP_DOXY, PRES_DOXY) + 1000
+swRho_DOXY=swSigma0(PSAL_DOXY, TEMP_DOXY, PRES_DOXY) + 1000
 
 ########################################################
 
