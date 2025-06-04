@@ -1,0 +1,637 @@
+#######################################################################################
+#	This program is designed to modify a BR file into BD file
+#       
+#       Catherine Schmechtig 2021 March 	
+#
+#	V1.0 20190503 : Initial version	
+#	V1.1 20190517 : robust to CTD
+#       V1.2 20190628 : OFFSET for DOXY out of drift 
+#	V1.3 20200325 : Correct an issue on QC index
+#	V2.0 20200515 : Add Break points in the drift estimation
+#	V2.1 20200819 : Add HISTORY PARAMETER
+#	V2.2 20210219 : Estimate NITRATE_ADJUSTED_ERROR from DOXY_ADJUSTED_ERROR
+#	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR
+#	V2.4 20210309 : CHLA DM with Xing's slope, Quenching from Terrats 2020 and median of minimum for Dark estimation
+#	V2.5 20210416 : T_incline for DOXY  	      
+#       V2.6 20220224 : BBP700_ADJUSTED_ERROR
+#
+#	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
+#	-Change the QC
+#	-Check DATA_MODE (If not already set to D)
+# 	-Change the DATA_STATE_INDICATOR (Table 6 - Argo user Manual )
+#	-Change the PARAMETER_DATA_MODE
+#	-Calculate the PROFILE_PARAM_QC 
+#	-Change the HISTORY section ( + Increase )
+#		-HISTORY_INSTITUTION (Table 4)
+#		-HISTORY_STEP (Table 12)
+#		-HISTORY_DATE
+#		-HISTORY_SOFTWARE (if applicable)
+#		-HISTORY_SOFTWARE_RELEASE (if applicable)		
+#		-HISTORY_ACTION (Table 7) 
+#		-HISTORY_PARAMETER
+#					
+#	-Change the SCIENTIFIC_CALIB_xxx Section
+#		-SCIENTIFIC_CALIB_COMMENT
+#		-SCIENTIFIC_CALIB_COEFFICIENT
+#		-SCIENTIFIC_CALIB_EQUATION
+#		-SCIENTIFIC_CALIB_DATE
+#		
+#	-Inputs : 
+#		output of the script ./Fill_DM_BP.sh
+#		Bfiles
+#	-Output :
+#		Bfiles with a change in DM for one parameter
+########################################################################################
+
+#' WRITE_DM_BP
+#'
+#' This program is designed to modify a BR file into BD file
+#'
+#' @param input_file text file including all usefull information
+#'  for the adjustment separated by ";"
+#'   filename             full path of the B file
+#'   filename_core        full path of the core file
+#'   metadata_filename    full path of the meta file
+#'   param                name of the variable to be adjusted
+#'   type                 A (ascending) D (descending) profiles
+#'   offset               offset coefficient
+#'   slope                slope coefficient
+#'   drift                drift coefficient
+#'   incline              incline T coefficient (for oxyen)
+#'   N_CYCLE_BEGIN        first Cycle Number for applying the drift
+#'   param_error          error values (in dbar for oxygen)
+#'   qc                   qc values for adjusted param
+#'   scientific_comment   string
+#'   date_update          date update yyyymmddhhmmss
+#'
+#' @return Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
+#' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close
+#' @importFrom string str_pad str_split str_subset str_replace
+#' @importFrom dm_filler DOXY_adj NITRATE_ERROR_ESTIMATION BBP700_ERROR_ESTIMATION
+#' @importFrom dm_filler PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
+#' @export
+WRITE_DM_BP <- function(input_file) {
+
+
+
+	###################################################################################
+	# READ the INPUT FILE 
+	###################################################################################
+
+
+
+	input=read.table(file=input_file,header=TRUE,sep=";")
+
+	# header
+	# filename;filename_core;metadata_file;param;type;offset;slope;drift;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update
+
+	# List of the file to process
+	LIST_nc=input$filename
+
+	# List of the associated core file
+	LIST_nc_core=input$filename_core
+
+	# Build the Variable Name 
+	PARAM_name=input$param
+
+	# Get the type of correction (AD, Adjustment - GL, Grey list) 
+	CORRECTION_TYPE=as.character(input$type)
+
+	# Get the correction values
+	OFFSET=input$offset
+
+	SLOPE=input$slope
+
+	DRIFT=input$drift
+
+	INCLINE_T=input$incline 
+
+	N_CYCLE_BEGIN=input$N_CYCLE_BEGIN
+
+	# Get the error
+	ERROR=input$param_error
+
+	#get the new value of the QC
+	PARAM_ADJUSTED_QC_value=input$qc
+
+	# Get the scientific Comment
+	scientific_comment=input$scientific_comment
+
+	# Get the date of the correction
+	date_update=as.character(input$date_update)
+
+	# Get the launch date to calculate the Drift (between the launch date and the date of the profile) 
+	metadatafile=as.character(input$metadata_file)
+
+	#####################################################################################
+	# Loop on all the files in the List
+	#####################################################################################
+	for (i in seq(1,length(LIST_nc))) {
+
+		print(i)
+
+		FLAG_CTD=TRUE
+
+		IDnc=as.character(LIST_nc[i])
+
+		IDnc_core=as.character(LIST_nc_core[i])
+
+		# Open the B file 
+		filenc=ncdf4::nc_open(IDnc,readunlim=FALSE,write=TRUE)
+
+		# Open the metadata file
+		filenc_meta=ncdf4::nc_open(metadatafile[i],readunlim=FALSE,write=FALSE)
+
+		# Open the core file
+		filenc_core=ncdf4::nc_open(IDnc_core,readunlim=FALSE,write=FALSE) 
+
+	###################################################################################
+	#### Work on variable Name
+	###################################################################################
+
+		PARAM_ADJUSTED_name=paste(PARAM_name[i],"_ADJUSTED",sep="")
+
+		PARAM_ADJUSTED_QC_name=paste(PARAM_ADJUSTED_name,"_QC",sep="")
+
+		PARAM_QC_name=paste(PARAM_name[i],"_QC",sep="")
+
+		PARAM_ADJUSTED_ERROR_name=paste(PARAM_ADJUSTED_name,"_ERROR",sep="")
+
+		PARAM_STRING=string::str_pad(PARAM_name[i],64,"right")
+
+		PROFILE_PARAM_QC_name=paste("PROFILE_",PARAM_name[i],"_QC",sep="")
+
+	###################################################################################
+	####    Read the file
+	###################################################################################
+
+		PARAMETER=ncdf4::ncvar_get(filenc,"PARAMETER")
+
+		index_param=which(PARAMETER == PARAM_STRING , arr.ind=TRUE)
+
+	###	Very IMPORTANT
+	###	Next iteration if the parameter is not in the file 
+
+		if ( length(index_param)==0 ) {
+		next
+		}
+
+
+		PARAM=ncdf4::ncvar_get(filenc,as.character(PARAM_name[i]))
+
+		PARAM_ADJUSTED=ncdf4::ncvar_get(filenc,as.character(PARAM_ADJUSTED_name))
+
+		PARAM_ADJUSTED_ERROR=ncdf4::ncvar_get(filenc,as.character(PARAM_ADJUSTED_ERROR_name))
+
+		PROFILE_PARAM_QC=ncdf4::ncvar_get(filenc,PROFILE_PARAM_QC_name)
+
+		PARAMETER_DATA_MODE=ncdf4::ncvar_get(filenc,"PARAMETER_DATA_MODE")
+
+
+		if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL")  | (PARAM_name[i] == "BBP700")) {
+
+			PARAM_ADJUSTED_QC=ncdf4::ncvar_get(filenc,PARAM_QC_name)
+
+		} else {
+
+			PARAM_ADJUSTED_QC=ncdf4::ncvar_get(filenc,PARAM_ADJUSTED_QC_name)  ## for CHLA and NITRATE
+
+		}
+
+	####################################################################################
+	# PARAM_ADJUSTED Estimation
+	####################################################################################
+		# Please Check that we should work on Raw data and not on Adjusted Data but it could be an issue for quenching and factor 2 CATSCHM
+
+		if ( CORRECTION_TYPE[i] == "AD" ) {
+
+	###     For the Drift calculation we have to work on date 
+	###	First some Work on the date
+
+		# get the Launch date in the metadata file 
+
+			launch_date=ncdf4::ncvar_get(filenc_meta,"LAUNCH_DATE")
+
+			launch_date_juld=as.numeric(julian(as.POSIXlt(launch_date,format="%Y%m%d%H%M%S",origin="1950-01-01"),origin="1950-01-01",TZ="GMT"))
+
+		# get the scale factor of BBP
+			if ( PARAM_name[i] == "BBP700" ) {
+
+				PREDEPLOYMENT_CALIB_COEFFICIENT=ncdf4::ncvar_get(filenc_meta,"PREDEPLOYMENT_CALIB_COEFFICIENT")
+
+				CALIB_BBP700=string::str_split(string::str_subset(PREDEPLOYMENT_CALIB_COEFFICIENT,"SCALE_BACKSCATTERING700"),",")
+
+				scale_BBP700=as.numeric(string::str_replace(string::str_subset(CALIB_BBP700[[1]],"SCALE_BACKSCATTERING700"),"SCALE_BACKSCATTERING700="," "))
+
+			} 
+		# get the actual date in the profile file 
+
+			profile_date_juld=unique(ncdf4::ncvar_get(filenc,"JULD"))
+
+		# For DOXY we need to go through the adjustment of PPOX_DOXY 
+
+			if ( PARAM_name[i] == "DOXY" ) {
+
+				DOXY_ADJ=dm_filler::DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], INCLINE_T[i], ERROR[i], profile_date_juld ,launch_date_juld )
+
+				PARAM_ADJUSTED=DOXY_ADJ$DOXY
+
+				PARAM_ADJUSTED_ERROR=DOXY_ADJ$DOXY_ERROR
+
+				FLAG_CTD=DOXY_ADJ$FLAG_CTD
+
+				if (!FLAG_CTD) PARAM_ADJUSTED_QC_value[i] = "4"
+
+			} else if ( PARAM_name[i] == "NITRATE" ) {	
+
+				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
+
+				PARAM_ADJUSTED_ERROR=dm_filler::NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
+
+			} else if ( PARAM_name[i] == "PH_IN_SITU_TOTAL" ) {
+
+				PH_ADJ=dm_filler::PH_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld,index_param )
+				PARAM_ADJUSTED=PH_ADJ$PH
+
+				FLAG_CTD=PH_ADJ$FLAG_CTD
+
+				PARAM_ADJUSTED_ERROR=m_filler::PH_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param,FLAG_CTD)
+
+			} else if ( PARAM_name[i] == "CHLA" ) {
+
+				PARAM_ADJUSTED=as.numeric(SLOPE[i])*PARAM_ADJUSTED
+
+				PARAM_ADJUSTED_ERROR=dm_filler::CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i])
+
+			} else if ( PARAM_name[i] == "BBP700" ) {
+
+				PARAM_ADJUSTED=(PARAM-as.numeric(OFFSET[i]))*as.numeric(SLOPE[i])
+
+				PARAM_ADJUSTED_ERROR=dm_filler::BBP700_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],scale_BBP700)
+
+			} else {
+
+				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
+
+				PARAM_ADJUSTED_ERROR=replace(PARAM,!is.na(PARAM),ERROR[i])
+
+			}
+
+		} else {	
+
+			PARAM_ADJUSTED=rep(NA,length(PARAM_ADJUSTED))
+
+			PARAM_ADJUSTED_ERROR=rep(NA,length(PARAM_ADJUSTED))
+
+		}
+
+
+	####################################################################################
+	#### Work on index of the correction 
+	#### We should get information from PARAMETER which is the list of PARAMETER 
+	#### with CALIBRATION information 
+	####################################################################################
+		
+		for ( irow in seq(1,nrow(index_param))) {
+
+			i_param_param =index_param[irow,1]
+			
+			i_calib_param =index_param[irow,2]	# Check how N-CALIB increases CATSCHM
+
+			i_prof_param = index_param[irow,3]
+
+			index_scientific=append(index_param[irow,],1,after=0) # build the index to write the scientific_calib_comment at the right place 
+
+
+	####################################################################################
+	# PARAM_ADJUSTED_QC MODIFICATION
+	####################################################################################
+			## Check how many QC should be set/change
+
+		if (i_prof_param == 1 ) {
+
+			if ( filenc$dim$N_LEVELS$len == 1 )  {	# prof one or one level  
+
+					N_QC=length(which(!is.na(PARAM[1])))
+
+						index_qc=which(!is.na(PARAM[1]))
+
+				} else {
+
+				if ( nrow(index_param) == 1 ) {
+
+						N_QC=length(which(!is.na(PARAM))) # prof one different levels
+
+								index_qc=which(!is.na(PARAM)) # prof one different levels
+
+				} else {
+			
+							N_QC=length(which(!is.na(PARAM[,i_prof_param]))) # prof one different levels
+
+							index_qc=which(!is.na(PARAM[,i_prof_param])) # prof one different levels
+
+				}
+
+				}
+
+		} else {
+
+					if ( filenc$dim$N_LEVELS$len == 1 )  {  # prof one or one level  
+
+							N_QC=length(which(!is.na(PARAM[i_prof_param])))
+
+							index_qc=which(!is.na(PARAM[i_prof_param]))
+
+					} else {
+
+							N_QC=length(which(!is.na(PARAM[,i_prof_param]))) # prof one different levels
+
+							index_qc=which(!is.na(PARAM[,i_prof_param])) # prof one different levels
+
+					}
+
+		}
+
+		if ( N_QC > 0 ) { 
+
+		if ( CORRECTION_TYPE[i] == "AD" ) {
+
+			for (i_qc in seq(1,N_QC)) {
+
+				j=index_qc[i_qc]
+
+				QC_test=substr(PARAM_ADJUSTED_QC[i_prof_param], j, j)
+
+				if ( PARAM_name[i] != "NITRATE" && PARAM_name[i] != "CHLA" ) {
+
+					if ( ( QC_test == "3") || ( QC_test == "2") || (QC_test == " ") || ( QC_test == "1") ) { # To check
+
+						substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
+					}
+
+				} else {
+
+									if ( ( QC_test == "2") || (QC_test == " ") || ( QC_test == "1") ) { # To check
+
+											substr(PARAM_ADJUSTED_QC[i_prof_param], j , j)<- as.character(PARAM_ADJUSTED_QC_value[i])
+									}
+
+							}
+
+				if ( ( QC_test == "4" ) || ( PARAM_ADJUSTED_QC_value[i] == "4" ) ) {  ## Fill value for QC=4 and QC=9
+
+					if (i_prof_param == 1 && nrow(index_param) == 1 ) { #try || instead of &&
+
+						PARAM_ADJUSTED[j]=NA
+
+						PARAM_ADJUSTED_ERROR[j]=NA
+					
+					} else {
+
+						if ( filenc$dim$N_LEVELS$len == 1 ) {
+
+							PARAM_ADJUSTED[j]=NA
+
+							PARAM_ADJUSTED_ERROR[j]=NA
+
+
+						} else {
+
+							PARAM_ADJUSTED[j,i_prof_param]=NA
+
+							PARAM_ADJUSTED_ERROR[j,i_prof_param]=NA
+
+						}
+					}
+
+				}
+
+			}
+
+		} else {
+
+			for (i_qc in seq(1,N_QC)) {
+
+				j=index_qc[i_qc]
+
+				substr(PARAM_ADJUSTED_QC[i_prof_param], j , j) <- as.character(PARAM_ADJUSTED_QC_value[i])
+			}
+
+		}
+
+		}
+
+
+	####################################################################################
+	# SCIENTIFIC_CALIB_SECTION
+	####################################################################################
+
+	#	scientific calib comment
+		SCIENTIFIC_CALIB_COMMENT=string::str_pad(scientific_comment[i],256,"right")
+
+		if (!FLAG_CTD) SCIENTIFIC_CALIB_COMMENT=string::str_pad("no adjustment is performed because of issues in CTD",256,"right")
+
+		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_COMMENT",SCIENTIFIC_CALIB_COMMENT,start=index_scientific,count=c(256,1,1,1))
+
+	# 	scientific calib Coefficient and equation 
+		if ( CORRECTION_TYPE[i] == "AD") {
+
+			scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i],", DRIFT_DAY_BEGIN=",N_CYCLE_BEGIN[i])
+
+			if ( PARAM_name[i] == "DOXY" ) {
+
+				scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i],", INCLINE_T=",INCLINE_T[i],", launch_date_juld=",launch_date)
+
+
+				scientific_equation=paste("DOXY_ADJUSTED=f(PPOX_DOXY_ADJUSTED); PPOX_DOXY_ADJUSTED=OFFSET+((PPOX_DOXY*SLOPE)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP); PPOX_DOXY=f(DOXY)")
+
+				if (!FLAG_CTD) {
+
+					scientific_coefficient="none"
+
+					scientific_equation="none"
+
+				}
+
+			} else if ( PARAM_name[i] == "PH_IN_SITU_TOTAL" ) {
+
+				scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - delta_pH*TCOR); TCOR = (TREF+273.15)/(TEMP+273.15); TREF = TEMP at 900dbars; delta_pH = OFFSET+DRIFT*(profile_date_juld-launch_date_juld)/(100*365.)")
+
+			} else if ( PARAM_name[i] == "CHLA" | PARAM_name[i] == "BBP700" ) {
+
+				scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name," - OFFSET) * SLOPE ") 
+
+			} else {
+
+				scientific_equation=paste(PARAM_ADJUSTED_name,"=(",PARAM_name,"*SLOPE+OFFSET)+(DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+
+			}
+
+		} else {
+
+			scientific_coefficient="none"
+
+			scientific_equation="none"
+			
+		}
+
+		SCIENTIFIC_CALIB_COEFFICIENT=string::str_pad(scientific_coefficient,256,"right")
+
+		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_COEFFICIENT",SCIENTIFIC_CALIB_COEFFICIENT,start=index_scientific,count=c(256,1,1,1))
+
+		SCIENTIFIC_CALIB_EQUATION=string::str_pad(scientific_equation,256,"right")
+
+		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_EQUATION",SCIENTIFIC_CALIB_EQUATION,start=index_scientific,count=c(256,1,1,1))
+
+	#	Scientific calib date
+		ncdf4::ncvar_put(filenc,"SCIENTIFIC_CALIB_DATE",date_update[i],start=index_scientific,count=c(14,1,1,1))
+
+
+	#####################################################################################
+	# History Section
+	#####################################################################################
+		# N_HISTORY
+		N_HISTORY=filenc$dim[['N_HISTORY']]$len
+		i_history=N_HISTORY+1
+
+	###     HISTORY INSTITUTION
+	##	We should ask for Data center for table 4 of the argo user's manual (VF for VilleFranche ?) CATSCHM
+		HISTORY_INSTITUTION="VF  "
+		ncdf4::ncvar_put(filenc,"HISTORY_INSTITUTION",HISTORY_INSTITUTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+	###	HISTORY_STEP	
+	###	Delayed mode code
+		HISTORY_STEP="ARSQ"
+		ncdf4::ncvar_put(filenc,"HISTORY_STEP",HISTORY_STEP,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+	###     HISTORY SOFTWARE Delayed Mode Filler Tool ;-)
+		HISTORY_SOFTWARE="DMFT"
+		ncdf4::ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+	###	HISTORY SOFTWARE RELEASE ;-) My first version !!
+		HISTORY_SOFTWARE_RELEASE="V2.6"
+		ncdf4::ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+	###     HISTORY_DATE (Same as Date update) 
+		ncdf4::ncvar_put(filenc,"HISTORY_DATE",date_update[i],start=c(1,i_prof_param,i_history),count=c(14,1,1))
+
+	### 	HISTORY_ACTION (Change Value CV - I don't know If I should also said CF)
+		HISTORY_ACTION="CV  "
+		ncdf4::ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
+
+	###     HISTORY_PARAMETER 
+			HISTORY_PARAMETER=PARAM_STRING
+			ncdf4::ncvar_put(filenc,"HISTORY_PARAMETER",HISTORY_PARAMETER,start=c(1,i_prof_param,i_history),count=c(64,1,1))
+
+	#####################################################################################
+	# PROFILE_PARAM_QC Calculation 
+	#####################################################################################
+	#### Definition
+	# " " -> no QC performed
+	# "A" -> N=100% All profile levels contain good data
+	# "B" -> 75% <= N < 100%
+	# "C" -> 50% <= N < 75%
+	# "D" -> 25% <= N < 50%
+	# "E" -> 0% <= N < 25%
+	# "F" -> N=0%; no profile levels have good data
+
+	# Initialisation
+		N_good=0
+	
+	# Split the string to count 
+		QC=unlist(strsplit(PARAM_ADJUSTED_QC[i_prof_param],split=""))
+
+		N_QC_1=length(which(QC == "1"))
+		N_QC_2=length(which(QC == "2"))
+		N_QC_5=length(which(QC == "5"))
+		N_QC_8=length(which(QC == "8"))
+
+
+		if ( N_QC != 0) {
+	
+			N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC
+
+		} else {
+
+			N_QC_tot=nchar(PARAM_ADJUSTED_QC[i_prof_param])		
+			N_QC_9=length(which(QC == "9"))
+			N_QC_B=length(which(QC == " "))
+			if ( N_QC_tot == N_QC_9 ) N_good = -99
+			if ( N_QC_tot == N_QC_9+N_QC_B ) N_good = -99
+
+		}
+
+		
+		if ( N_good == -99) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-" "
+
+		if ( N_good == 0) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"F"
+
+		if ( N_good > 0 && N_good < 25 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"E"
+
+		if ( N_good >= 25 && N_good < 50 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"D"
+
+		if ( N_good >= 50 && N_good < 75 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"C"
+
+		if ( N_good >= 75 && N_good < 100 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"B"
+
+		if ( N_good == 100 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"A"
+
+
+	#####################################################################################
+	# DATA_MODE / PARAMETER_DATA_MODE / DATA_STATE_INDICATOR
+	#####################################################################################
+	# What I don't like is the fact that DATA_STATE_INDICATOR and DATA_MODE 
+	# are linked to i_prof_param while we are not doing D for CDOM, BBP700 and CHLA 
+	# at the same time CATSCHM
+	#####################################################################################
+
+		# We perform DM QC on the profile i_prof so DATA_MODE should be set to D
+		# For the good i_prof 
+		ncdf4::ncvar_put(filenc,"DATA_MODE","D",start=c(i_prof_param),count=c(1))
+
+		substr(PARAMETER_DATA_MODE[i_prof_param],i_param_param,i_param_param)<-"D"	
+
+		# We perform DM QC on the profile i_prof but it still can be improved 
+		# so we should put DATA_STATE_INDICATOR as 2C for i_prof
+		ncdf4::ncvar_put(filenc,"DATA_STATE_INDICATOR","2C  ",start=c(1,i_prof_param),count=c(4,1))
+
+
+		} # End loop on irow 
+
+	###     Enter the Adjusted _QC in the file 
+
+		ncdf4::ncvar_put(filenc,PARAM_ADJUSTED_QC_name,PARAM_ADJUSTED_QC)
+
+	###	Enter the Adjustment in the File (We move this here for isolated FLAG "4" set to NA)
+		
+		ncdf4::ncvar_put(filenc,PARAM_ADJUSTED_name,PARAM_ADJUSTED)
+
+		ncdf4::ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
+
+	###    Enter the PROFILE_QC in the file 
+
+		ncdf4::ncvar_put(filenc,PROFILE_PARAM_QC_name,PROFILE_PARAM_QC)
+
+	###     ENTER the PARAMETER_DATA_MODE	
+
+		ncdf4::ncvar_put(filenc,"PARAMETER_DATA_MODE",PARAMETER_DATA_MODE)
+
+	#####################################################################################
+	# DATE UPDATE 
+	#####################################################################################
+
+	###     DATE_UPDATE 
+		ncdf4::ncvar_put(filenc,"DATE_UPDATE",date_update[i])
+
+
+	######### Close the Files 
+		
+
+		ncdf4::nc_close(filenc)
+
+		ncdf4::nc_close(filenc_meta)
+
+		ncdf4::nc_close(filenc_core)
+
+	} # end loop on file 
+}
