@@ -39,7 +39,7 @@ PPOX=PPOX_DOXY/1013.25 # PPOX en atm, PPOX_DOXY en mbar
 #######################################################
 # Density conversion -> To check
 #######################################################
-swRho_DOXY=oce::swRho(PSAL_DOXY, TEMP_DOXY, PRES_DOXY)
+swRho_DOXY=oce::swsigma0(PSAL_DOXY, TEMP_DOXY, PRES_DOXY) + 1000
 
 ########################################################
 

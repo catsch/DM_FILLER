@@ -37,7 +37,7 @@ a_pCoef3 <- 0.0419  # DO 4330
 #######################################################
 # Density conversion -> To check
 #######################################################
-swRho_DOXY=oce::swRho(PSAL_DOXY, TEMP_DOXY, PRES_DOXY)
+swRho_DOXY=oce::swsigma0(PSAL_DOXY, TEMP_DOXY, PRES_DOXY) + 1000
 
 DOXY=DOXY_DOXY*swRho_DOXY/1000 # (DOXY en micromol / l)
 
