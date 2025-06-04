@@ -9,3 +9,7 @@ list_file
 lance_DM_BP_XX.sh
 lance_DM_BP.sh
 lance.sh
+
+# R workspace files
+.RData
+.Rhistory

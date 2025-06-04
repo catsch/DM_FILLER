@@ -252,7 +252,8 @@ esac	# end case to specify or not different slots
 # Write the launcher for the DM
 ###############################################
 #echo "R DM_list_"$id_WMO "--vanilla < test_NCALIB_BP.R" > lance_DM_BP.sh
-echo "R DM_list_"$id_WMO "--vanilla < WRITE_DM_BP.R" 	> lance_DM_BP.sh
+echo " cd $DIR_DM_FILLER/src_R/launcher" > lance_DM_BP.sh
+echo "R DM_list_"$id_WMO "--vanilla < launch_DM_filler_tool.R" 	>> lance_DM_BP.sh
 echo "for i in \`ls -1 $WORK_DIR/B*\`"  		>> lance_DM_BP.sh
 echo "do"						>> lance_DM_BP.sh
 echo "j=\`echo \$i | sed s/BR/BD/ | sed s/WORK/DM/\`" 	>> lance_DM_BP.sh
