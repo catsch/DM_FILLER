@@ -38,10 +38,10 @@ library(ncdf4)
 library(stringr)
 require(oce)
 
-source("./READ_CTD.R")
-source("./PPOX_to_DOXY.R")
-source("./DOXY_to_PPOX.R")
-source("./DOXY_adj.R")
+source("./src_R/R/READ_CTD.R")
+source("./src_R/R/PPOX_to_DOXY.R")
+source("./src_R/R/DOXY_to_PPOX.R")
+source("./src_R/R/DOXY_adj.R")
 
 uf=commandArgs()
 
