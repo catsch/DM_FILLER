@@ -1,3 +1,13 @@
+#' read_CTD
+#'
+#' This function read CTD argo file
+#'
+#' @param filenc_core An object of class ncdf4 of argo core file
+#'
+#' @return a list of 3 vector: 1. pressure, 2. salinity, 3.temperature
+#' @importFrom  ncdf4 ncvar_get
+#' @export
+#'
 read_CTD <- function ( filenc_core ){
 
 ##################################################
@@ -14,15 +24,15 @@ DATA_MODE_CTD=DATA_MODE[1]
 
 if ( DATA_MODE_CTD == "R" ) {
 
-	PSAL=ncvar_get(filenc_core,"PSAL")
-	TEMP=ncvar_get(filenc_core,"TEMP")
-	PRES=ncvar_get(filenc_core,"PRES")
+	PSAL=ncdf4::ncvar_get(filenc_core,"PSAL")
+	TEMP=ncdf4::ncvar_get(filenc_core,"TEMP")
+	PRES=ncdf4::ncvar_get(filenc_core,"PRES")
 
 } else {
 	
-	PSAL=ncvar_get(filenc_core,"PSAL_ADJUSTED")
-	TEMP=ncvar_get(filenc_core,"TEMP_ADJUSTED")
-	PRES=ncvar_get(filenc_core,"PRES_ADJUSTED")
+	PSAL=ncdf4::ncvar_get(filenc_core,"PSAL_ADJUSTED")
+	TEMP=ncdf4::ncvar_get(filenc_core,"TEMP_ADJUSTED")
+	PRES=ncdf4::ncvar_get(filenc_core,"PRES_ADJUSTED")
 
 }
 
@@ -64,8 +74,3 @@ result=(list(PRES=PRES_CTD,PSAL=PSAL_CTD,TEMP=TEMP_CTD))
 return(result)
 
 }
-   
-
-
-
-
