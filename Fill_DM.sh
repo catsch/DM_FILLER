@@ -93,8 +93,7 @@ fi
 
 # To get some information on the DEPLOYMENT
 metadata_file=${DIR_RAW_DATA}/${id_WMO}/${id_WMO}_meta.nc
-echo $RT_DIR
-echo $WORK_DIR
+
 # cp the file in a working directory
 cp -f $RT_DIR/* $WORK_DIR/.
 
