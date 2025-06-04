@@ -8,7 +8,7 @@ list_file
 # file created automatically
 lance_DM_BP_XX.sh
 lance_DM_BP.sh
-lance.sh
+lance_DM.sh
 
 # R workspace files
 .RData
