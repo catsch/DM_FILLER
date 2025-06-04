@@ -1,3 +1,11 @@
 # temporary file created by DM filler
 DM_list*
 list_file
+
+# environment file
+.env
+
+# file created automatically
+lance_DM_BP_XX.sh
+lance_DM_BP.sh
+lance.sh

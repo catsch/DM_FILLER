@@ -8,6 +8,12 @@
 ##   Designed by Catherine Schmechtig, July 2018
 ##################################################################################
 clear
+
+##################################################
+### SOURCE .ENV
+##################################################
+source .env
+
 echo "##########################################"
 echo "### Welcome in the DM mode filler Tool ###"
 echo "##########################################" 
@@ -66,31 +72,31 @@ esac
 ################################################################################
 ### Going to the DATA directory and list the files that need to be filled
 ################################################################################ 
-RT_DIR="../../DATA/RT/"$id_WMO"/profiles"
-WORK_DIR="../../DATA/WORK/"$id_WMO"/profiles"
-DM_DIR="../../DATA/DM/"$id_WMO"/profiles"
+RT_DIR=${DIR_RAW_DATA}/${id_WMO}/profiles
+WORK_DIR=${DIR_OUT_DATA}/WORK/${id_WMO}/profiles
+DM_DIR=${DIR_OUT_DATA}/DM/${id_WMO}/profiles
 
 # Test the existence of the DM DIRECTORY
 if [ ! -d "$DM_DIR" ] 
 then
-mkdir "../../DATA/DM/"$id_WMO
-mkdir $DM_DIR
+	mkdir -p ${DM_DIR}
 fi 
 
 # Test the existence of the WORKING DIRECTORY
 if [ ! -d "$WORK_DIR" ] 
 then
-mkdir "../../DATA/WORK/"$id_WMO 
+	mkdir -p ${WORK_DIR}
 else
-echo "your working directory ../../DATA/WORK/"$id_WMO "already exists, you should remove it before continuing"
+echo "your working directory" $WORK_DIR "already exists, you should remove it before continuing"
 exit
 fi
 
 # To get some information on the DEPLOYMENT
-metadata_file="../../DATA/RT/"$id_WMO"/"$id_WMO"_meta.nc"
-
+metadata_file=${DIR_RAW_DATA}/${id_WMO}/${id_WMO}_meta.nc
+echo $RT_DIR
+echo $WORK_DIR
 # cp the file in a working directory
-cp -fr $RT_DIR $WORK_DIR
+cp -f $RT_DIR/* $WORK_DIR/.
 
 num_RT=`ls -1 $WORK_DIR/B* | wc -l | awk '{print $1}'`
 
