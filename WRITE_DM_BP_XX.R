@@ -46,9 +46,9 @@ source("./src_R/R/PPOX_to_DOXY.R")
 source("./src_R/R/DOXY_to_PPOX.R")
 source("./src_R/R/DOXY_adj.R")
 source("./CHLA_adj_XX.R")
-source("./src_R/R/MLD.R")
-source("./src_R/R/IPAR_15_DEPTH.R")
-source("./src_R/R/RunningFilter.R")
+source("./MLD.R")
+source("./IPAR_15_DEPTH.R")
+source("./RunningFilter.R")
 
 uf=commandArgs()
 
