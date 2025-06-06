@@ -34,6 +34,7 @@ read id_WMO
 
 ## Header
 echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;incline;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
+echo "filename;param;dm_manager;orcid_manager;institution_manager;dm_operator;orcid_operator;institution_operator"  > "ORCID_list_"$id_WMO
 
 
 #######################################################################################
@@ -71,6 +72,48 @@ case "$id_PARAM" in
 	"6")
 		PARAM="PH_IN_SITU_TOTAL"
 		;;			
+esac
+
+echo "---"
+echo "Who is the Primary dmqc operator (contact point for all bgc variable operations)"
+echo "	0  -Yes, I know"
+echo "	1  -No, I don't know"
+read id_P_ORCID
+case "$id_P_ORCID" in
+	"0")
+		echo "Primary dmqc operator name "
+		read P_NAME
+		echo "Primary dmqc operator orcid"
+		read P_ORCID
+		echo "Primary dmqc operator institution"
+		read P_INSTIT
+		;;
+	"1")
+		P_NAME=NA
+		P_ORCID=NA
+		P_INSTIT=NA
+		;;
+esac
+
+echo "---"
+echo "Who is the dmqc operator performing the dmqc for $PARAM"
+echo "	0  -Yes, I know"
+echo "	1  -No, I don't know"
+read id_V_ORCID
+case "$id_V_ORCID" in
+	"0")
+		echo "Variable dmqc operator name"
+		read V_NAME
+		echo "Variable dmqc operator orcid"
+		read V_ORCID
+		echo "Variable dmqc operator institution"
+		read V_INSTIT
+		;;
+	1)
+		V_NAME=NA
+		V_ORCID=NA
+		V_INSTIT=NA
+		;;
 esac
 
 ################################################################################
@@ -148,6 +191,7 @@ case "$id_LIST" in
 				fi
 			fi
 			echo $i";"$icore";"$metadata_file";"$PARAM";AD;"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";1;"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+			echo $i";"$PARAM";"$P_NAME";"$P_ORCID";"$P_INSTIT";"$V_NAME";"$V_ORCID";"$V_INSTIT  >> "ORCID_list_"$id_WMO
 		done  
 		;;
 	"1")
@@ -241,6 +285,7 @@ case "$id_LIST" in
 				if [ $a -ge $ideb ] &&  [ $a -le $ifin ] 
 				then 				
 				echo $i";"$icore";"$metadata_file";"$PARAM";"$TYPE";"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";"$N_CYCLE_BEGIN";"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+				echo $i";"$PARAM";"$P_NAME";"$P_ORCID";"$P_INSTIT";"$V_NAME";"$V_ORCID";"$V_INSTIT  >> "ORCID_list_"$id_WMO
 				fi
 				((a+=1))
 			done  # end loop on file to correct
