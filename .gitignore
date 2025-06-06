@@ -1,6 +1,7 @@
 # temporary file created by DM filler
 DM_list*
 list_file
+ORCID_list*
 
 # environment file
 .env
