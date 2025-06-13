@@ -4,8 +4,11 @@ roxygenise()
 
 # get argument
 uf <- commandArgs()
-input_file  <- uf[2]
+input_file1  <- uf[2]
+input_file2  <- uf[3]
 
 # launch DM filler tool
-print(input_file)
-WRITE_DM_BP(input_file)
+WRITE_DM_BP(input_file1)
+
+# launch orcid input
+add_orcid(input_file2)

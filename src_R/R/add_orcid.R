@@ -16,7 +16,9 @@ add_orcid <- function(input_file) {
   liste_to_do <- read.table(input_file, header = TRUE, sep = ";")
 
   # List of the file to process
-  LIST_nc <- liste_to_do$filename
+  list_nc <- liste_to_do$filename
+
+  # information to be filled
   dm_manager <- liste_to_do$dm_manager
   orcid_manager <- liste_to_do$orcid_manager
   institution_manager <- liste_to_do$institution_manager
@@ -25,18 +27,30 @@ add_orcid <- function(input_file) {
   institution_operator <- liste_to_do$institution_operator
   variable <- liste_to_do$param
 
-  #### default ouput
+  #### default ouput - status of the report
   return_msge <- NULL
-  is_here <- rep(0, length(LIST_nc)) # -1 no param or issue / 0 no dm / 1 dm
-  position <- rep(1, length(LIST_nc))
+  
+  #### working variable
+  # variable status : -1 no param
+  #                    0 no dm is performed for the variable
+  #                    1 dm is made for the variable
+  status <- rep(0, length(list_nc))
 
-  for (ifile in seq(1, length(LIST_nc))) {
+  # DM position is status = 1
+  dm_pos <- rep(0, length(list_nc))
+
+  # max number of dm operation already done
+  dm_max <- rep(1, length(list_nc))
+
+  # first loop on file
+  # for primary information and getting dm variable information
+  for (ifile in seq(1, length(list_nc))) {
 
     ##########################
     #### Reading the Bfile
     ##########################
-    IDnc <- LIST_nc[ifile]
-    filenc_out <- ncdf4::nc_open(IDnc, readunlim = FALSE, write = TRUE)
+    id_nc <- list_nc[ifile]
+    filenc_out <- ncdf4::nc_open(id_nc, readunlim = FALSE, write = TRUE)
 
     att <- ncdf4::ncatt_get(filenc_out, 0)
 
@@ -45,35 +59,41 @@ add_orcid <- function(input_file) {
     ##########################
     #primary
     if (!is.na(dm_manager[ifile])) {
+      # availability checking
       is_ok <- lapply(names(att),
                       function(x) grepl("comment_dmqc_operator1", x))
       l_dmqc1 <- which(unlist(is_ok) == TRUE)
       if (any(unlist(is_ok))) {
+        # yes it is
         is_ok <- grepl("PRIMARY", toupper(att[l_dmqc1]))
         if (any(unlist(is_ok))) {
+          # information checking
           is_ok <- grepl(toupper(dm_manager[ifile]), toupper(att[l_dmqc1]))
           if (!any(unlist(is_ok))) {
+            # yes it is
             msge <- paste("comment_dmqc_operator1 in the file is different",
                           "from information return by the user",
                           "- orcid info was not reported in this file")
-            return_msge <- c(return_msge, paste(IDnc, msge, sep = " : "))
-            is_here[ifile] <- -1
+            return_msge <- c(return_msge, paste(id_nc, msge, sep = " : "))
+            status[ifile] <- -1
             next
           }
         }else {
+          # no, isn't it
           msge <- paste("comment_dmqc_operator1 must be the PRIMARY contact",
                         "point - orcid info was not reported in this file")
-          return_msge <- c(return_msge, paste(IDnc, msge, sep = " : "))
-          is_here[ifile] <- -1
+          return_msge <- c(return_msge, paste(id_nc, msge, sep = " : "))
+          status[ifile] <- -1
           next
         }
       }else {
+        #### adding information
         comment_dmqc_operator1 <- paste("PRIMARY",
                                         orcid_manager[ifile],
                                         dm_manager[ifile],
                                         institution_manager[ifile],
                                         sep = " | ")
-        #### adding information
+
         ncdf4::ncatt_put(filenc_out,
                          varid = 0,
                          "comment_dmqc_operator1",
@@ -81,59 +101,71 @@ add_orcid <- function(input_file) {
       }
     }
 
-    # variable
+    # variable availability (has dm already been made?)
     is_ok <- lapply(names(att), function(x) grepl("comment_dmqc_operator", x))
     l_dmqc <- which(unlist(is_ok) == TRUE)
-    # it is already in the file
     is_ok <- grepl(toupper(variable[ifile]), toupper(att[l_dmqc]))
+    # its dm_pos
     nb <- lapply(names(att)[l_dmqc],
                  function(x) gsub("comment_dmqc_operator", "", x))
     nb <- as.numeric(unlist(nb))
-    if (any(unlist(is_ok))) {
-      is_here[ifile] <- 1
-      position[ifile] <- nb[is_ok == TRUE]
-    }else {
-      nb <- max(nb)
-      position[ifile] <- nb
-    }
 
-    # should be present in the file
+    if (any(unlist(is_ok))) {
+      status[ifile] <- 1
+      dm_pos[ifile] <- nb[is_ok == TRUE]
+    }
+    dm_max[ifile] <- max(nb)
+
+    # is the parameter in the file
     param_string <- stringr::str_pad(variable[ifile], 64, "right")
     parameter <- ncdf4::ncvar_get(filenc_out, "PARAMETER")
 
 		index_param <- which(parameter == param_string, arr.ind = TRUE)
     if (length(index_param) == 0) {
-      is_here[ifile] <- -1
+      status[ifile] <- -1
     }
     ncdf4::nc_close(filenc_out)
   }
 
-  for (ifile in seq(1, length(LIST_nc))) {
+  for (ifile in seq(1, length(list_nc))) {
+    msge <- NULL
     if (!is.na(dm_operator[ifile])) {
-      IDnc <- LIST_nc[ifile]
-      filenc_out <- ncdf4::nc_open(IDnc, readunlim = FALSE, write = TRUE)
 
-      if (any(is_here == 0)) {
-        pos <- max(position[is_here == 0]) + 1
-        message(pos)
+      if (any(status == 0)) {
+        pos <- max(dm_max[status == 0]) + 1
       }else {
-        pos <- position[ifile]
+        pos <- dm_pos[ifile]
       }
 
-      if (is_here[ifile] >= 0) {
+      if (any(status == 0) && any(status == 1) && status[ifile] == 1) {
+        # delete old position
+        filenc_out <- RNetCDF::open.nc(id_nc, write = TRUE)
+        attribute <- paste0("comment_dmqc_operator", dm_pos[ifile])
+        RNetCDF::att.delete.nc(filenc_out, "NC_GLOBAL", attribute)
+        RNetCDF::close.nc(filenc_out)
+        msge <- paste("RM", attribute)
+      }
+
+      if (status[ifile] >= 0) {
+        # add dmoperator information
+        id_nc <- list_nc[ifile]
+        filenc_out <- ncdf4::nc_open(id_nc, readunlim = FALSE, write = TRUE)
+
         comment_dmqc_operator <- paste(toupper(variable[ifile]),
-                                      orcid_operator[ifile],
-                                      dm_operator[ifile],
-                                      institution_operator[ifile],
-                                      sep = " | ")
+                                       orcid_operator[ifile],
+                                       dm_operator[ifile],
+                                       institution_operator[ifile],
+                                       sep = " | ")
 
         ncdf4::ncatt_put(filenc_out,
-                        varid = 0,
-                        paste0("comment_dmqc_operator", pos),
-                        comment_dmqc_operator)
-        return_msge <- c(return_msge, paste(IDnc, "Done", sep = " : "))
+                         varid = 0,
+                         paste0("comment_dmqc_operator", pos),
+                         comment_dmqc_operator)
+        ncdf4::nc_close(filenc_out)
+        msge <- paste(msge,
+                      paste("ADD", paste0("comment_dmqc_operator", pos)))
       }
-      ncdf4::nc_close(filenc_out)
+      return_msge <- c(return_msge, paste(id_nc, msge, sep = " : "))
     }
   }
   return(return_msge)
