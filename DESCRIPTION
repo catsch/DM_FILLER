@@ -1,4 +1,4 @@
-Package: dm_filler
+Package: dmfiller
 Title: SOFTWARE Delayed Mode Filler Tool
 Version: 2.6
 Authors@R: c( 

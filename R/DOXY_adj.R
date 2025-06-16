@@ -17,7 +17,7 @@
 #' @return vector adjusted oxygen values (numeric)
 #'
 #' @importFrom ncdf4 ncvar_get
-#' @importFrom dm_filler read_CTD DOXY_to_PPOX PPOX_to_DOXY
+#' @importFrom dmfiller read_CTD DOXY_to_PPOX PPOX_to_DOXY
 #'
 #' @export
 #'
@@ -25,7 +25,7 @@ DOXY_adj <- function ( filenc_core, filenc, PARAM_name, OFFSET, SLOPE, DRIFT, IN
 
 #### READ Core file 
 
-CTD=dm_filler::read_CTD(filenc_core)
+CTD=dmfiller::read_CTD(filenc_core)
 
 # we get        : CTD$PRES
 #               : CTD$PSAL
@@ -50,15 +50,15 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
 	#### Estimate PPOX from DOXY
 	# calculate PPOX_DOXY in mbar from DOXY in micromol/kg
-	PPOX_DOXY=dm_filler::DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
+	PPOX_DOXY=dmfiller::DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
 
 	PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP_INTERP)*(SLOPE*PPOX_DOXY)+OFFSET
 
 	# calculate DOXY in micromol/kg from PPOX_DOXY in mbar
-	DOXY_ADJUSTED=dm_filler::PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)
+	DOXY_ADJUSTED=dmfiller::PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)
 
 	# calculate the error on DOXY from error on PPOX
-	ERROR_DOXY=dm_filler::PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_ERROR)
+	ERROR_DOXY=dmfiller::PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_ERROR)
 
 } else {
 

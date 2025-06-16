@@ -14,14 +14,14 @@
 #' @return list with vector pH adjusted values (numeric)
 #' 	and CTD flag availability (TRUE or FALSE)
 #' @importFrom ncdf4 ncvar_get
-#' @importFrom dm_filler read_CTD
+#' @importFrom dmfiller read_CTD
 #' @export
 #'
 PH_adj <- function ( filenc_core, filenc, PARAM_name, OFFSET, SLOPE, DRIFT, ERROR, profile_date_juld ,launch_date_juld, index_param ){
 
 #### READ Core file
 
-CTD=dm_filler::read_CTD(filenc_core)
+CTD=dmfiller::read_CTD(filenc_core)
 
 # we get        : CTD$PRES
 #               : CTD$PSAL

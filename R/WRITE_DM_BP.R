@@ -67,9 +67,9 @@
 #' @return Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
 #' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close
 #' @importFrom stringr str_pad str_split str_subset str_replace
-#' @importFrom dm_filler DOXY_adj NITRATE_ERROR_ESTIMATION 
-#' @importFrom dm_filler BBP700_ERROR_ESTIMATION
-#' @importFrom dm_filler PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
+#' @importFrom dmfiller DOXY_adj NITRATE_ERROR_ESTIMATION 
+#' @importFrom dmfiller BBP700_ERROR_ESTIMATION
+#' @importFrom dmfiller PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
 #' @export
 WRITE_DM_BP <- function(input_file) {
 
@@ -232,7 +232,7 @@ WRITE_DM_BP <- function(input_file) {
 
 			if ( PARAM_name[i] == "DOXY" ) {
 
-				DOXY_ADJ=dm_filler::DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], INCLINE_T[i], ERROR[i], profile_date_juld ,launch_date_juld )
+				DOXY_ADJ=dmfiller::DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], INCLINE_T[i], ERROR[i], profile_date_juld ,launch_date_juld )
 
 				PARAM_ADJUSTED=DOXY_ADJ$DOXY
 
@@ -246,11 +246,11 @@ WRITE_DM_BP <- function(input_file) {
 
 				PARAM_ADJUSTED=as.numeric((DRIFT[i]/100.*(profile_date_juld-launch_date_juld)/365.))+(SLOPE[i]*PARAM+OFFSET[i])
 
-				PARAM_ADJUSTED_ERROR=dm_filler::NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
+				PARAM_ADJUSTED_ERROR=dmfiller::NITRATE_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param)
 
 			} else if ( PARAM_name[i] == "PH_IN_SITU_TOTAL" ) {
 
-				PH_ADJ=dm_filler::PH_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld,index_param )
+				PH_ADJ=dmfiller::PH_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], ERROR[i], profile_date_juld ,launch_date_juld,index_param )
 				PARAM_ADJUSTED=PH_ADJ$PH
 
 				FLAG_CTD=PH_ADJ$FLAG_CTD
@@ -261,13 +261,13 @@ WRITE_DM_BP <- function(input_file) {
 
 				PARAM_ADJUSTED=as.numeric(SLOPE[i])*PARAM_ADJUSTED
 
-				PARAM_ADJUSTED_ERROR=dm_filler::CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i])
+				PARAM_ADJUSTED_ERROR=dmfiller::CHLA_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i])
 
 			} else if ( PARAM_name[i] == "BBP700" ) {
 
 				PARAM_ADJUSTED=(PARAM-as.numeric(OFFSET[i]))*as.numeric(SLOPE[i])
 
-				PARAM_ADJUSTED_ERROR=dm_filler::BBP700_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],scale_BBP700)
+				PARAM_ADJUSTED_ERROR=dmfiller::BBP700_ERROR_ESTIMATION(filenc,PARAM_ADJUSTED,ERROR[i],scale_BBP700)
 
 			} else {
 
