@@ -1,6 +1,6 @@
 Package: dm_filler
 Title: SOFTWARE Delayed Mode Filler Tool
-Version: V2.6
+Version: 2.6
 Authors@R: c( 
     person(given = "Catherine",
            family = "Schmechtig",
