@@ -11,7 +11,7 @@ source:
   sha256: 4528954f7050de74bd3662637db02a7e77d262447a205018104ac64a5d668007
 
 build:
-  merge_build_host: true  # [win]
+  merge_build_host: false  # [win]
   number: 0
   noarch: generic
   rpaths:
