@@ -13,7 +13,8 @@
 #	V2.3 20210302 : Estimate PH_IN_SITU_TOTAL_ERROR from DOXY_ADJUSTED_ERROR
 #	V2.4 20210309 : CHLA DM with Xing's slope, Quenching from Terrats 2020 and median of minimum for Dark estimation
 #	V2.5 20210416 : T_incline for DOXY  	      
-#       V2.6 20220224 : BBP700_ADJUSTED_ERROR
+#   V2.6 20220224 : BBP700_ADJUSTED_ERROR
+#	V2.7 20250623 : transform into conda library
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -67,6 +68,7 @@
 #' @return Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
 #' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close
 #' @importFrom stringr str_pad str_split str_subset str_replace
+#' @importFrom lubridate ymd_hms
 #' @importFrom dmfiller DOXY_adj NITRATE_ERROR_ESTIMATION 
 #' @importFrom dmfiller BBP700_ERROR_ESTIMATION
 #' @importFrom dmfiller PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
@@ -93,6 +95,7 @@ WRITE_DM_BP <- function(input_file) {
 
 	# Build the Variable Name 
 	PARAM_name=input$param
+
 
 	# Get the type of correction (AD, Adjustment - GL, Grey list) 
 	CORRECTION_TYPE=as.character(input$type)
@@ -212,7 +215,11 @@ WRITE_DM_BP <- function(input_file) {
 
 			launch_date=ncdf4::ncvar_get(filenc_meta,"LAUNCH_DATE")
 
-			launch_date_juld=as.numeric(julian(as.POSIXlt(launch_date,format="%Y%m%d%H%M%S",origin="1950-01-01"),origin="1950-01-01",TZ="GMT"))
+			#launch_date_juld=as.numeric(julian(as.POSIXlt(launch_date,format="%Y%m%d%H%M%S",origin="1950-01-01"),origin="1950-01-01",TZ="GMT"))
+			# library changes to be all terrain (diff < 0.05 secs)
+			launch_date_juld <- as.numeric(julian(lubridate::ymd_hms(launch_date),
+												  origin = as.POSIXlt("1950-01-01 00:00:00",
+                                                              tz = "GMT")))
 
 		# get the scale factor of BBP
 			if ( PARAM_name[i] == "BBP700" ) {
@@ -523,7 +530,7 @@ WRITE_DM_BP <- function(input_file) {
 			HISTORY_PARAMETER=PARAM_STRING
 			ncdf4::ncvar_put(filenc,"HISTORY_PARAMETER",HISTORY_PARAMETER,start=c(1,i_prof_param,i_history),count=c(64,1,1))
 
-	#####################################################################################
+	####################################################################################
 	# PROFILE_PARAM_QC Calculation 
 	#####################################################################################
 	#### Definition
