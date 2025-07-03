@@ -2,6 +2,7 @@
 DM_list*
 list_file
 ORCID_list*
+QC_list*
 
 # environment file
 .env
