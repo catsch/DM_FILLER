@@ -638,7 +638,9 @@ WRITE_DM_BP <- function(input_file) {
 
 		ncdf4::nc_close(filenc_meta)
 
-		ncdf4::nc_close(filenc_core)
-
+		if ( CORRECTION_TYPE[i] == "AD") {
+			ncdf4::nc_close(filenc_core)
+		}
+		
 	} # end loop on file 
 }
