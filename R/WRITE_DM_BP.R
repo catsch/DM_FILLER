@@ -145,9 +145,6 @@ WRITE_DM_BP <- function(input_file) {
 		# Open the metadata file
 		filenc_meta=ncdf4::nc_open(metadatafile[i],readunlim=FALSE,write=FALSE)
 
-		# Open the core file
-		filenc_core=ncdf4::nc_open(IDnc_core,readunlim=FALSE,write=FALSE) 
-
 	###################################################################################
 	#### Work on variable Name
 	###################################################################################
@@ -208,6 +205,9 @@ WRITE_DM_BP <- function(input_file) {
 
 		if ( CORRECTION_TYPE[i] == "AD" ) {
 
+			# Open the core file
+			filenc_core=ncdf4::nc_open(IDnc_core,readunlim=FALSE,write=FALSE)
+			
 	###     For the Drift calculation we have to work on date 
 	###	First some Work on the date
 
