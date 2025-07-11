@@ -6,7 +6,7 @@
 #' @param param_qc matrix of parameter qc to be changes
 #' @param profile_param_qc_name  name of parameter qc to be estimated
 #' @param profile_param_qc  matrix of parameter qc to be estimated
-#' @param n_qc
+#' @param n_qc number of QC for param
 #' @param i_prof_param profile index of the parameter in the nc file
 #'
 #' @return update history section of ncfile

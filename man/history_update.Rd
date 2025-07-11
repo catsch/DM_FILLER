@@ -20,7 +20,7 @@ history_update(
 
 \item{i_prof_param}{profile index of the parameter in the nc file}
 
-\item{step}{"DM" delayed mode action or "QC" Quality change action}
+\item{step}{"DM" adjustment report or "QC" Quality controle report}
 
 \item{date_update}{update text with format yyyymmddHHMMSS}
 
