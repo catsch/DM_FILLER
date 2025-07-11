@@ -33,7 +33,7 @@ read id_WMO
 > "DM_list_"$id_WMO
 
 ## Header
-echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;incline;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
+echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;incline;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update;mandating_institution"  >> "DM_list_"$id_WMO
 echo "filename;param;dm_manager;orcid_manager;institution_manager;dm_operator;orcid_operator;institution_operator"  > "ORCID_list_"$id_WMO
 
 
@@ -72,6 +72,21 @@ case "$id_PARAM" in
 	"6")
 		PARAM="PH_IN_SITU_TOTAL"
 		;;			
+esac
+
+echo "---"
+echo "Who is the mandating institution (Please inter the NERC R04 code https://vocab.nerc.ac.uk/collection/R04/current/)"
+echo "	0  -Yes, I know"
+echo "	1  -No, I don't know"
+read INSTITUT
+case "$INSTITUT" in
+	"0")
+		echo "NERC R04 code"
+		read mandating_institution
+		;;
+	"1")
+		mandating_institution=""
+		;;
 esac
 
 echo "---"
@@ -297,7 +312,7 @@ esac	# end case to specify or not different slots
 # Write the launcher for the DM
 ###############################################
 #echo "R DM_list_"$id_WMO "--vanilla < test_NCALIB_BP.R" > lance_DM_BP.sh
-echo " cd $DIR_DM_FILLER/src_R/launcher" > lance_DM_BP.sh
+echo " cd $DIR_DM_FILLER/launcher" > lance_DM_BP.sh
 echo "R $DIR_DM_FILLER/DM_list_$id_WMO $DIR_DM_FILLER/ORCID_list_"$id_WMO "--vanilla < launch_DM_filler_tool.R" 	>> lance_DM_BP.sh
 echo "for i in \`ls -1 $WORK_DIR/B*\`"  		>> lance_DM_BP.sh
 echo "do"						>> lance_DM_BP.sh

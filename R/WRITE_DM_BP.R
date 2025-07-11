@@ -14,7 +14,7 @@
 #	V2.4 20210309 : CHLA DM with Xing's slope, Quenching from Terrats 2020 and median of minimum for Dark estimation
 #	V2.5 20210416 : T_incline for DOXY  	      
 #   V2.6 20220224 : BBP700_ADJUSTED_ERROR
-#	V2.7 20250623 : transform into conda library
+#	V2.7 20250623 : transform into conda library (vracape) - add a version release files into libraries
 #
 #	-With an estimation of PARAM_ADJUSTED with a drift, a slope, an offset and some Break points 	
 #	-Change the QC
@@ -126,6 +126,8 @@ WRITE_DM_BP <- function(input_file) {
 	# Get the launch date to calculate the Drift (between the launch date and the date of the profile) 
 	metadatafile=as.character(input$metadata_file)
 
+	# Get the mandating institution
+	institution <- input$mandating_institution
 	#####################################################################################
 	# Loop on all the files in the List
 	#####################################################################################
@@ -497,38 +499,7 @@ WRITE_DM_BP <- function(input_file) {
 	#####################################################################################
 	# History Section
 	#####################################################################################
-		# N_HISTORY
-		N_HISTORY=filenc$dim[['N_HISTORY']]$len
-		i_history=N_HISTORY+1
-
-	###     HISTORY INSTITUTION
-	##	We should ask for Data center for table 4 of the argo user's manual (VF for VilleFranche ?) CATSCHM
-		HISTORY_INSTITUTION="VF  "
-		ncdf4::ncvar_put(filenc,"HISTORY_INSTITUTION",HISTORY_INSTITUTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
-
-	###	HISTORY_STEP	
-	###	Delayed mode code
-		HISTORY_STEP="ARSQ"
-		ncdf4::ncvar_put(filenc,"HISTORY_STEP",HISTORY_STEP,start=c(1,i_prof_param,i_history),count=c(4,1,1))
-
-	###     HISTORY SOFTWARE Delayed Mode Filler Tool ;-)
-		HISTORY_SOFTWARE="DMFT"
-		ncdf4::ncvar_put(filenc,"HISTORY_SOFTWARE",HISTORY_SOFTWARE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
-
-	###	HISTORY SOFTWARE RELEASE ;-) My first version !!
-		HISTORY_SOFTWARE_RELEASE="V2.6"
-		ncdf4::ncvar_put(filenc,"HISTORY_SOFTWARE_RELEASE",HISTORY_SOFTWARE_RELEASE,start=c(1,i_prof_param,i_history),count=c(4,1,1))
-
-	###     HISTORY_DATE (Same as Date update) 
-		ncdf4::ncvar_put(filenc,"HISTORY_DATE",date_update[i],start=c(1,i_prof_param,i_history),count=c(14,1,1))
-
-	### 	HISTORY_ACTION (Change Value CV - I don't know If I should also said CF)
-		HISTORY_ACTION="CV  "
-		ncdf4::ncvar_put(filenc,"HISTORY_ACTION",HISTORY_ACTION,start=c(1,i_prof_param,i_history),count=c(4,1,1))
-
-	###     HISTORY_PARAMETER 
-			HISTORY_PARAMETER=PARAM_STRING
-			ncdf4::ncvar_put(filenc,"HISTORY_PARAMETER",HISTORY_PARAMETER,start=c(1,i_prof_param,i_history),count=c(64,1,1))
+	history_update(filenc, PARAM_STRING, i_prof_param, "DM", date_update, institution) 
 
 	####################################################################################
 	# PROFILE_PARAM_QC Calculation 
