@@ -505,12 +505,11 @@ WRITE_DM_BP <- function(input_file) {
 	# PROFILE_PARAM_QC Calculation 
 	#####################################################################################
 	dmfiller::profile_param_qc_estimation(filenc,
-										  PARAM_ADJUSTED_QC_name,
 										  PARAM_ADJUSTED_QC,
+										  PROFILE_PARAM_QC_name,
 										  PROFILE_PARAM_QC,
 										  N_QC,
 										  i_prof_param)
-
 
 	#####################################################################################
 	# DATA_MODE / PARAMETER_DATA_MODE / DATA_STATE_INDICATOR

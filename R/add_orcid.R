@@ -134,7 +134,7 @@ add_orcid <- function(input_file) {
       if (any(status == 0)) {
         pos <- max(dm_max[status == 0]) + 1
       }else {
-        pos <- dm_pos[ifile]
+        pos <- dm_max[ifile]
       }
 
       if (any(status == 0) && any(status == 1) && status[ifile] == 1) {
