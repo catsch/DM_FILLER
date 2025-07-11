@@ -499,7 +499,7 @@ WRITE_DM_BP <- function(input_file) {
 	#####################################################################################
 	# History Section
 	#####################################################################################
-	dmfiller::history_update(filenc, PARAM_STRING, i_prof_param, "DM", date_update, institution) 
+	dmfiller::history_update(filenc, PARAM_STRING, i_prof_param, "DM", date_update[i], institution[i]) 
 
 	####################################################################################
 	# PROFILE_PARAM_QC Calculation 
