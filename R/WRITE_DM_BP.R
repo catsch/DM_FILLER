@@ -69,8 +69,8 @@
 #' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close
 #' @importFrom stringr str_pad str_split str_subset str_replace
 #' @importFrom lubridate ymd_hms
-#' @importFrom dmfiller DOXY_adj NITRATE_ERROR_ESTIMATION 
-#' @importFrom dmfiller BBP700_ERROR_ESTIMATION
+#' @importFrom dmfiller DOXY_adj NITRATE_ERROR_ESTIMATION BBP700_ERROR_ESTIMATION
+#' @importFrom dmfiller  history_update profile_param_qc_estimation
 #' @importFrom dmfiller PH_adj PH_ERROR_ESTIMATION CHLA_ERROR_ESTIMATION
 #' @export
 WRITE_DM_BP <- function(input_file) {
@@ -499,60 +499,17 @@ WRITE_DM_BP <- function(input_file) {
 	#####################################################################################
 	# History Section
 	#####################################################################################
-	history_update(filenc, PARAM_STRING, i_prof_param, "DM", date_update, institution) 
+	dmfiller::history_update(filenc, PARAM_STRING, i_prof_param, "DM", date_update, institution) 
 
 	####################################################################################
 	# PROFILE_PARAM_QC Calculation 
 	#####################################################################################
-	#### Definition
-	# " " -> no QC performed
-	# "A" -> N=100% All profile levels contain good data
-	# "B" -> 75% <= N < 100%
-	# "C" -> 50% <= N < 75%
-	# "D" -> 25% <= N < 50%
-	# "E" -> 0% <= N < 25%
-	# "F" -> N=0%; no profile levels have good data
-
-	# Initialisation
-		N_good=0
-	
-	# Split the string to count 
-		QC=unlist(strsplit(PARAM_ADJUSTED_QC[i_prof_param],split=""))
-
-		N_QC_1=length(which(QC == "1"))
-		N_QC_2=length(which(QC == "2"))
-		N_QC_5=length(which(QC == "5"))
-		N_QC_8=length(which(QC == "8"))
-
-
-		if ( N_QC != 0) {
-	
-			N_good=100 * ( N_QC_1 + N_QC_2 + N_QC_5 + N_QC_8 ) / N_QC
-
-		} else {
-
-			N_QC_tot=nchar(PARAM_ADJUSTED_QC[i_prof_param])		
-			N_QC_9=length(which(QC == "9"))
-			N_QC_B=length(which(QC == " "))
-			if ( N_QC_tot == N_QC_9 ) N_good = -99
-			if ( N_QC_tot == N_QC_9+N_QC_B ) N_good = -99
-
-		}
-
-		
-		if ( N_good == -99) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-" "
-
-		if ( N_good == 0) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"F"
-
-		if ( N_good > 0 && N_good < 25 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"E"
-
-		if ( N_good >= 25 && N_good < 50 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"D"
-
-		if ( N_good >= 50 && N_good < 75 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"C"
-
-		if ( N_good >= 75 && N_good < 100 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"B"
-
-		if ( N_good == 100 ) substr(PROFILE_PARAM_QC,i_prof_param,i_prof_param) <-"A"
+	dmfiller::profile_param_qc_estimation(filenc,
+										  PARAM_ADJUSTED_QC_name,
+										  PARAM_ADJUSTED_QC,
+										  PROFILE_PARAM_QC,
+										  N_QC,
+										  i_prof_param)
 
 
 	#####################################################################################
@@ -586,9 +543,6 @@ WRITE_DM_BP <- function(input_file) {
 
 		ncdf4::ncvar_put(filenc,PARAM_ADJUSTED_ERROR_name,PARAM_ADJUSTED_ERROR)
 
-	###    Enter the PROFILE_QC in the file 
-
-		ncdf4::ncvar_put(filenc,PROFILE_PARAM_QC_name,PROFILE_PARAM_QC)
 
 	###     ENTER the PARAMETER_DATA_MODE	
 
