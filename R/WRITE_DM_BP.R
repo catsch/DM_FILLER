@@ -64,6 +64,7 @@
 #'   qc                   qc values for adjusted param
 #'   scientific_comment   string
 #'   date_update          date update yyyymmddhhmmss
+#' 	 mandating_institution institution that mandates que DMQC
 #'
 #' @return Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
 #' @importFrom ncdf4 nc_open ncvar_get ncvar_put nc_close

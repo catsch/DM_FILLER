@@ -22,7 +22,8 @@ N_CYCLE_BEGIN        first Cycle Number for applying the drift
 param_error          error values (in dbar for oxygen)
 qc                   qc values for adjusted param
 scientific_comment   string
-date_update          date update yyyymmddhhmmss}
+date_update          date update yyyymmddhhmmss
+mandating_institution institution that mandates que DMQC}
 }
 \value{
 Bfile with param_adjusted, param_adjusted_qc, param_adjusted_error
