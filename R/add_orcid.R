@@ -103,18 +103,22 @@ add_orcid <- function(input_file) {
 
     # variable availability (has dm already been made?)
     is_ok <- lapply(names(att), function(x) grepl("comment_dmqc_operator", x))
-    l_dmqc <- which(unlist(is_ok) == TRUE)
-    is_ok <- grepl(toupper(variable[ifile]), toupper(att[l_dmqc]))
-    # its dm_pos
-    nb <- lapply(names(att)[l_dmqc],
-                 function(x) gsub("comment_dmqc_operator", "", x))
-    nb <- as.numeric(unlist(nb))
-
+    # A faire que comment_dmqc ope est présent dans le fichier ====
     if (any(unlist(is_ok))) {
-      status[ifile] <- 1
-      dm_pos[ifile] <- nb[is_ok == TRUE]
+      message("youhou")
+      l_dmqc <- which(unlist(is_ok) == TRUE)
+      is_ok <- grepl(toupper(variable[ifile]), toupper(att[l_dmqc]))
+      # its dm_pos
+      nb <- lapply(names(att)[l_dmqc],
+                   function(x) gsub("comment_dmqc_operator", "", x))
+      nb <- as.numeric(unlist(nb))
+
+      if (any(unlist(is_ok))) {
+        status[ifile] <- 1
+        dm_pos[ifile] <- nb[is_ok == TRUE]
+      }
+      dm_max[ifile] <- max(nb)
     }
-    dm_max[ifile] <- max(nb)
 
     # is the parameter in the file
     param_string <- stringr::str_pad(variable[ifile], 64, "right")
@@ -134,10 +138,11 @@ add_orcid <- function(input_file) {
       if (any(status == 0)) {
         pos <- max(dm_max[status == 0]) + 1
       }else {
-        pos <- dm_max[ifile]
+        pos <- dm_pos[ifile]
       }
 
       if (any(status == 0) && any(status == 1) && status[ifile] == 1) {
+
         # delete old position
         filenc_out <- RNetCDF::open.nc(id_nc, write = TRUE)
         attribute <- paste0("comment_dmqc_operator", dm_pos[ifile])
