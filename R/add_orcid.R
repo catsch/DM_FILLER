@@ -105,7 +105,6 @@ add_orcid <- function(input_file) {
     is_ok <- lapply(names(att), function(x) grepl("comment_dmqc_operator", x))
     # A faire que comment_dmqc ope est présent dans le fichier ====
     if (any(unlist(is_ok))) {
-      message("youhou")
       l_dmqc <- which(unlist(is_ok) == TRUE)
       is_ok <- grepl(toupper(variable[ifile]), toupper(att[l_dmqc]))
       # its dm_pos
