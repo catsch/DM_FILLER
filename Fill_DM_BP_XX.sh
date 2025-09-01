@@ -34,7 +34,7 @@ read id_WMO
 > "DM_list_"$id_WMO
 
 ## Header
-echo "filename;filename_core;metadata_filename;param;type;offset;slope;drift;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
+echo "filename;filename_core;metadata_file;param;type;offset;slope;drift;N_CYCLE_BEGIN;param_error;qc;scientific_comment;date_update"  >> "DM_list_"$id_WMO
 
 
 #######################################################################################
