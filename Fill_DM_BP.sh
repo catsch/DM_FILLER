@@ -81,7 +81,7 @@ echo "	1  -No, I don't know"
 read INSTITUT
 case "$INSTITUT" in
 	"0")
-		echo "NERC R04 code"
+		echo "NERC Institution R04 code"
 		read mandating_institution
 		;;
 	"1")
