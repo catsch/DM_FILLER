@@ -205,7 +205,7 @@ case "$id_LIST" in
 					icore=`echo $icore | sed s/"profiles\/R"/"profiles\/D"/`
 				fi
 			fi
-			echo $i";"$icore";"$metadata_file";"$PARAM";AD;"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";1;"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+			echo $i";"$icore";"$metadata_file";"$PARAM";AD;"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";1;"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE";"$mandating_institution  >> "DM_list_"$id_WMO
 			echo $i";"$PARAM";"$P_NAME";"$P_ORCID";"$P_INSTIT";"$V_NAME";"$V_ORCID";"$V_INSTIT  >> "ORCID_list_"$id_WMO
 		done  
 		;;
@@ -299,7 +299,7 @@ case "$id_LIST" in
 				fi
 				if [ $a -ge $ideb ] &&  [ $a -le $ifin ] 
 				then 				
-				echo $i";"$icore";"$metadata_file";"$PARAM";"$TYPE";"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";"$N_CYCLE_BEGIN";"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE  >> "DM_list_"$id_WMO
+				echo $i";"$icore";"$metadata_file";"$PARAM";"$TYPE";"$OFFSET";"$SLOPE";"$DRIFT";"$INCLINE_T";"$N_CYCLE_BEGIN";"$PARAM_ERROR";"$QC";"$SC_COMMENT";"$DATE_UPDATE";"$mandating_institution  >> "DM_list_"$id_WMO
 				echo $i";"$PARAM";"$P_NAME";"$P_ORCID";"$P_INSTIT";"$V_NAME";"$V_ORCID";"$V_INSTIT  >> "ORCID_list_"$id_WMO
 				fi
 				((a+=1))

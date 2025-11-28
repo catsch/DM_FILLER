@@ -383,7 +383,7 @@ for (i in seq(1,length(LIST_nc))) {
 
 		if ( PARAM_name[i] == "DOXY" ) {
 
-			scientific_equation=paste("PPOX_ADJUSTED=OFFSET+(PPOX*SLOPE)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)")
+			scientific_equation=paste("PPOX_ADJUSTED=(SLOPE)*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)*(PPOX_DOXY+OFFSET)")
 
 			if (!FLAG_CTD) {
 

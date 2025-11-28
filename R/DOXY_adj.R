@@ -42,7 +42,7 @@ PPOX_ERROR=replace(DOXY,!is.na(DOXY),ERROR)
 PRES=ncdf4::ncvar_get(filenc,"PRES")
 
 if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
-
+	FLAG_CTD=TRUE
 	# We interpolate CTD DATA to get TEMP and PSAL at all levels
 	TEMP_INTERP<- approx(CTD$PRES, CTD$TEMP, PRES, rule=2)$y
 
@@ -52,8 +52,9 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 	# calculate PPOX_DOXY in mbar from DOXY in micromol/kg
 	PPOX_DOXY=dmfiller::DOXY_to_PPOX(PRES, TEMP_INTERP, PSAL_INTERP, DOXY)
 
-	PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP_INTERP)*(SLOPE*PPOX_DOXY)+OFFSET
-
+	#PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP_INTERP)*(SLOPE)*(PPOX_DOXY+OFFSET)
+	# PPOX_DOXY_ADJUSTED=as.numeric((1.+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP_INTERP)*(SLOPE*PPOX_DOXY)+OFFSET
+	PPOX_DOXY_ADJUSTED=as.numeric((SLOPE*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365)+INCLINE_T*TEMP_INTERP)*(PPOX_DOXY+OFFSET))
 	# calculate DOXY in micromol/kg from PPOX_DOXY in mbar
 	DOXY_ADJUSTED=dmfiller::PPOX_to_DOXY(PRES, TEMP_INTERP, PSAL_INTERP, PPOX_DOXY_ADJUSTED)
 

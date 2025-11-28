@@ -29,7 +29,7 @@ history_update <- function(filenc,
 
 	###     HISTORY INSTITUTION
 	##	We should ask for Data center for table 4 of the argo user's manual  CATSCHM
-  if (nchar(institution) > 4) {
+  if (is.na(institution) || nchar(institution) > 4) {
     message(paste("Institution size is greater than 4 characters,",
                   "tool doesn't report the mandating institution"))
     inst <- "    "
