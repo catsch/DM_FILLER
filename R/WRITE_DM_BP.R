@@ -191,7 +191,7 @@ WRITE_DM_BP <- function(input_file) {
 		PARAMETER_DATA_MODE=ncdf4::ncvar_get(filenc,"PARAMETER_DATA_MODE")
 
 
-		if ( (PARAM_name[i] == "DOXY") | (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL")  | (PARAM_name[i] == "BBP700")) {
+		if ( (PARAM_name[i] == "DOXY") | (PARAM_name[i] == "DOXY_2")| (CORRECTION_TYPE[i] == "GL") | (PARAM_name[i] == "PH_IN_SITU_TOTAL")  | (PARAM_name[i] == "BBP700")) {
 
 			PARAM_ADJUSTED_QC=ncdf4::ncvar_get(filenc,PARAM_QC_name)
 
@@ -240,7 +240,7 @@ WRITE_DM_BP <- function(input_file) {
 
 		# For DOXY we need to go through the adjustment of PPOX_DOXY 
 
-			if ( PARAM_name[i] == "DOXY" ) {
+			if ( PARAM_name[i] == "DOXY" | PARAM_name[i] == "DOXY_2" ) {
 
 				DOXY_ADJ=dmfiller::DOXY_adj(filenc_core, filenc, PARAM_name[i] ,OFFSET[i], SLOPE[i], DRIFT[i], INCLINE_T[i], ERROR[i], profile_date_juld ,launch_date_juld )
 
@@ -265,7 +265,7 @@ WRITE_DM_BP <- function(input_file) {
 
 				FLAG_CTD=PH_ADJ$FLAG_CTD
 
-				PARAM_ADJUSTED_ERROR=m_filler::PH_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param,FLAG_CTD)
+				PARAM_ADJUSTED_ERROR=dm_filler::PH_ERROR_ESTIMATION(filenc,PARAM,PARAM_ADJUSTED,ERROR[i],index_param,FLAG_CTD)
 
 			} else if ( PARAM_name[i] == "CHLA" ) {
 
@@ -448,13 +448,15 @@ WRITE_DM_BP <- function(input_file) {
 
 			scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i],", DRIFT_DAY_BEGIN=",N_CYCLE_BEGIN[i])
 
-			if ( PARAM_name[i] == "DOXY" ) {
+			if ( PARAM_name[i] == "DOXY" | PARAM_name[i] == "DOXY_2") {
 
 				scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i],", INCLINE_T=",INCLINE_T[i],", launch_date_juld=",launch_date)
 
-
-				scientific_equation=paste("DOXY_ADJUSTED=f(PPOX_DOXY_ADJUSTED); PPOX_DOXY_ADJUSTED=(SLOPE*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP)*(PPOX_ADJUSTED+OFFSET); PPOX_DOXY=f(DOXY)")
-
+				if ( PARAM_name[i] == "DOXY" ) {
+					scientific_equation=paste("DOXY_ADJUSTED=f(PPOX_DOXY_ADJUSTED); PPOX_DOXY_ADJUSTED=(SLOPE*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP)*(PPOX_DOXY+OFFSET); PPOX_DOXY=f(DOXY)")	
+				}else if ( PARAM_name[i] == "DOXY_2" ) {
+					scientific_equation=paste("DOXY_2_ADJUSTED=f(PPOX_DOXY_2_ADJUSTED); PPOX_DOXY_2_ADJUSTED=(SLOPE*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP)*(PPOX_DOXY_2+OFFSET); PPOX_DOXY_2=f(DOXY_2)")
+				}
 				if (!FLAG_CTD) {
 
 					scientific_coefficient="none"

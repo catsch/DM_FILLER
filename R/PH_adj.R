@@ -50,6 +50,8 @@ if ( length(which(!is.na(CTD$TEMP)))>1 && length(which(!is.na(CTD$PSAL)))>1 ) {
 
 	}
 
+	FLAG_CTD=TRUE
+
 	TCOR=(TREF+273.15)/(CTD$TEMP+273.15)
 
 	# We interpolate TCOR to get the values at pH levels
