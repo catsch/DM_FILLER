@@ -7,6 +7,6 @@
 #' @export
 #'
 software_version <- function() {
-  version <- "V2.7"
+  version <- "V2.8"
   return(version)
 }
