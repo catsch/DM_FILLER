@@ -428,7 +428,7 @@ for (i in seq(1,length(LIST_nc))) {
 			scientific_coefficient=paste("OFFSET=",OFFSET[i],", SLOPE=",SLOPE[i],", DRIFT=",DRIFT[i],", INCLINE_T=",INCLINE_T[i],", launch_date_juld=",launch_date)
 
 
-			scientific_equation=paste("DOXY_ADJUSTED=f(PPOX_DOXY_ADJUSTED); PPOX_DOXY_ADJUSTED=((PPOX_DOXY+OFFSET)*SLOPE)*((1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP); PPOX_DOXY=f(DOXY)")
+			scientific_equation=paste("DOXY_ADJUSTED=f(PPOX_DOXY_ADJUSTED); PPOX_DOXY_ADJUSTED=(PPOX_DOXY+OFFSET)*(SLOPE*(1+DRIFT/100.*(profile_date_juld-launch_date_juld)/365.)+INCLINE_T*TEMP); PPOX_DOXY=f(DOXY)")
 
 			if (!FLAG_CTD) {
 
